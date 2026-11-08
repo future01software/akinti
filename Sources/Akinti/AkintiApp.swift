@@ -61,7 +61,7 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in captureClipboard() }
         .onAppear {
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
-            if CommandLine.arguments.contains("--select-first"), let first = visible.first { selection = [first.id] }
+            if CommandLine.arguments.contains("--select-first"), let first = visible.first(where: { $0.state == "İndiriliyor" }) ?? visible.first { selection = [first.id] }
             if CommandLine.arguments.contains("--open-settings") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { openSettings() }
             }
@@ -401,7 +401,7 @@ struct SegmentBar: View {
     /// Geliştirici seçenekleri (Terminal'den):
     ///   --state-dir <klasör>  geçmiş/ayarlar için ayrı bir klasör kullanır (gerçek verilere dokunmadan deneme)
     ///   --add <bağlantı>      açılışta indirme ekler (birden çok kez verilebilir)
-    ///   --select-first        açılışta ilk satırı seçer
+    ///   --select-first        açılışta ilk indirilen (yoksa ilk) satırı seçer
     ///   --open-settings       açılışta Ayarlar penceresini açar
     init() {
         let args = CommandLine.arguments

@@ -1,6 +1,16 @@
+<p align="center"><img src="Assets/AppIcon-1024.png" width="128" alt="Akıntı simgesi"></p>
+
 # Akıntı
 
 Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yöneticisi. Doğrudan dosya bağlantılarının yanında YouTube ve diğer video sitelerinden de indirir. MIT lisanslıdır. macOS 14 veya üzeri gerekir.
+
+<p align="center"><img src="docs/ekran-ana.png" alt="Akıntı ana penceresi: kategoriler, çok bağlantılı indirmeler ve parçalı ilerleme çubuğu"></p>
+
+| YouTube ve video siteleri | Ayarlar |
+|---|---|
+| <img src="docs/ekran-video.png" alt="Bir YouTube videosunun önizlemesini ve kalite seçimini gösteren ekleme penceresi"> | <img src="docs/ekran-ayarlar.png" alt="Dil, bağlantı sayısı ve hız sınırı ayarları"> |
+
+<p align="center"><img src="docs/screen-english-light.png" width="80%" alt="English interface in light mode"><br><sub>İngilizce arayüz, açık tema</sub></p>
 
 ## Çalıştırma
 
