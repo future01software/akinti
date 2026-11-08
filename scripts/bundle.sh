@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+BUILD_OPTIONS=(--scratch-path .build/bundle)
+case "$(swift build --help)" in
+    *swiftbuild*) BUILD_OPTIONS+=(--build-system swiftbuild) ;;
+esac
+swift build "${BUILD_OPTIONS[@]}" -c release
+BIN="$(swift build "${BUILD_OPTIONS[@]}" -c release --show-bin-path)"
+STAGING="$(mktemp -d /tmp/akinti-build.XXXXXX)"
+trap 'rm -rf "$STAGING"' EXIT
+APP="$STAGING/Akıntı.app"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp "$BIN/Akinti" "$APP/Contents/MacOS/Akinti"
+# Simge: scripts/make-icon.swift ile üretilir (bkz. README).
+cp Assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+cat > "$APP/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>Akinti</string>
+<key>CFBundleIdentifier</key><string>org.akinti.downloads</string>
+<key>CFBundleName</key><string>Akıntı</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.5.0</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>NSHighResolutionCapable</key><true/>
+</dict></plist>
+PLIST
+xattr -cr "$APP"
+codesign --force --sign - "$APP"
+codesign --verify --deep --strict "$APP"
+mkdir -p dist
+# Zip only regular file data: Finder and cloud-provider attributes are not archived.
+python3 - "$APP" "dist/Akinti-macOS.zip" <<'PYZIP'
+import pathlib, sys, zipfile
+app = pathlib.Path(sys.argv[1])
+with zipfile.ZipFile(sys.argv[2], 'w', zipfile.ZIP_DEFLATED) as archive:
+    for path in sorted(app.rglob('*')):
+        if path.is_file():
+            archive.write(path, path.relative_to(app.parent))
+PYZIP
+# Keep a convenient local app alongside the verified distribution archive.
+/usr/bin/ditto --norsrc --noextattr "$APP" "dist/Akıntı.app"
+echo "Hazır: dist/Akinti-macOS.zip (imzası doğrulanmış paket)"

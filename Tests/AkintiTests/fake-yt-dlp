@@ -1,0 +1,22 @@
+#!/bin/bash
+# Testler için sahte yt-dlp: ağa çıkmadan yt-dlp'nin çıktı biçimini taklit eder.
+folder=""; json=0; url="${@: -1}"
+while [ $# -gt 0 ]; do
+  case "$1" in -P) folder="$2"; shift ;; -J) json=1 ;; esac
+  shift
+done
+if [[ "$url" == *missing* ]]; then echo "ERROR: [youtube] abc: Video unavailable" >&2; exit 1; fi
+if [ $json = 1 ] && [[ "$url" == *list=* ]]; then
+  echo '{"_type":"playlist","title":"Test Listesi","extractor_key":"YoutubeTab","entries":[{"url":"https://www.youtube.com/watch?v=a1","title":"Bir"},{"url":"https://www.youtube.com/watch?v=b2","title":"İki"},{"url":"https://www.youtube.com/watch?v=c3","title":"Üç"}]}'
+  exit 0
+fi
+if [ $json = 1 ]; then
+  echo '{"title":"Test Video","duration":125,"extractor_key":"Youtube","thumbnail":"https://example.org/t.jpg","formats":[{"height":360},{"height":1080}]}'
+  exit 0
+fi
+echo "$ORIG_ARGS" > /dev/null
+steps=2; [[ "$url" == *slow* ]] && steps=40
+for i in $(seq 1 $steps); do echo "AKINTI $((i * 100)) $((steps * 100)) NA"; [[ "$url" == *slow* ]] && sleep 0.05; done
+file="$folder/Test Video [abc123].mp4"
+head -c $((steps * 100)) /dev/zero > "$file"
+echo "AKINTIFILE $file"

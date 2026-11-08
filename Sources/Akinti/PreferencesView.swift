@@ -1,0 +1,119 @@
+import SwiftUI
+import AppKit
+
+extension Preferences {
+    var colorScheme: ColorScheme? {
+        switch appearance { case "light": return .light; case "dark": return .dark; default: return nil }
+    }
+}
+
+struct PreferencesView: View {
+    @ObservedObject var store: DownloadStore
+    @State private var showHelp = false
+    var body: some View {
+        Form {
+            Section(t("Dil", "Language")) {
+                Picker(t("Uygulama dili", "App language"), selection: $store.preferences.language) {
+                    ForEach(AppLanguage.allCases) { Text($0.title).tag($0.rawValue) }
+                }.pickerStyle(.segmented)
+                Text(t("Değişiklik hemen uygulanır. Sistem seçeneği Mac’in diline uyar.", "Changes apply immediately. System follows your Mac’s language."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section(t("İndirilen dosyalar", "Downloaded files")) {
+                LabeledContent(t("Kaydetme klasörü", "Save folder")) {
+                    VStack(alignment: .trailing, spacing: 8) {
+                        Text(store.destinationFolder.path).font(.callout).textSelection(.enabled).multilineTextAlignment(.trailing)
+                        Button(t("Klasör seç…", "Choose Folder…")) { FolderPicker.choose(for: store) }
+                    }
+                }
+                Text(t("Yeni eklenen indirmeler bu klasöre kaydedilir. Mevcut indirmeler önceki klasörlerini kullanır.", "New downloads are saved here. Existing downloads keep their original folder."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section(t("İndirme davranışı", "Download behavior")) {
+                Picker(t("Aynı anda indirilecek dosya", "Simultaneous downloads"), selection: $store.limit) {
+                    ForEach(1...8, id: \.self) { Text(t("\($0) dosya", "\($0) files")).tag($0) }
+                }
+                Text(t("Diğer dosyalar sırada bekler. Sayıyı azaltmak, başlamış indirmeleri durdurmaz.", "Other files wait in the queue. Lowering the number doesn’t stop running downloads."))
+                    .font(.callout).foregroundStyle(.secondary)
+                Picker(t("Dosya başına bağlantı", "Connections per file"), selection: $store.preferences.connectionsPerDownload) {
+                    ForEach([1, 2, 4, 8, 16], id: \.self) { Text("\($0)").tag($0) }
+                }
+                Text(t("Sunucu destekliyorsa dosya parçalara bölünür ve aynı anda indirilir; desteklemiyorsa tek bağlantı kullanılır. Video sitelerinde parça sayısı olarak uygulanır.",
+                       "If the server supports it, the file is split into parts downloaded at once; otherwise a single connection is used. On video sites it sets the number of fragments."))
+                    .font(.callout).foregroundStyle(.secondary)
+                Picker(t("Hız sınırı", "Speed limit"), selection: $store.preferences.speedLimitKB) {
+                    ForEach(SpeedLimit.options, id: \.self) { Text(SpeedLimit.title($0)).tag($0) }
+                }
+                Text(t("Tüm indirmelerin toplam hızını sınırlar; alt çubuktan da değiştirilebilir. Video indirmelerinde yeni başlayanlara uygulanır.",
+                       "Limits the combined speed of all downloads; also available in the status bar. For videos it applies to newly started downloads."))
+                    .font(.callout).foregroundStyle(.secondary)
+                Picker(t("Otomatik yeniden deneme", "Automatic retry"), selection: $store.preferences.retryLimit) {
+                    Text(t("Kapalı", "Off")).tag(0)
+                    ForEach(1...5, id: \.self) { Text(t("En fazla \($0) kez", "Up to \($0) times")).tag($0) }
+                }
+                Text(t("Geçici ağ ve sunucu hatalarında bekleyerek tekrar dener. Bulunamayan dosyalar (404) yeniden denenmez.", "Retries temporary network and server errors after a pause. Missing files (404) are not retried."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section(t("Bağlantı yakalama", "Link capture")) {
+                Toggle(t("Kopyalanan indirme bağlantılarını yakala", "Capture copied download links"), isOn: $store.preferences.clipboardCapture)
+                Text(t("Bir dosya bağlantısını kopyalayıp Akıntı’ya geçtiğinizde ekleme penceresi kendiliğinden açılır. Bağlantıları pencereye sürükleyip bırakabilirsiniz de.", "When you copy a file link and switch to Akıntı, the add window opens automatically. You can also drag links into the window."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section(t("Görünüm", "Appearance")) {
+                Picker(t("Tema", "Theme"), selection: $store.preferences.appearance) {
+                    Text(t("Sistem", "System")).tag("system")
+                    Text(t("Açık", "Light")).tag("light")
+                    Text(t("Koyu", "Dark")).tag("dark")
+                }.pickerStyle(.segmented)
+            }
+            Section(t("Yardım", "Help")) {
+                LabeledContent(t("Kullanım rehberi", "User guide")) {
+                    Button { showHelp = true } label: { Label(t("Nasıl kullanılır?", "How to Use"), systemImage: "questionmark.circle") }
+                }
+                HStack {
+                    Label(t("Ayarlar otomatik kaydedilir", "Settings are saved automatically"), systemImage: "checkmark.circle").foregroundStyle(.secondary)
+                    Spacer()
+                    Text("Akıntı 0.5.0").foregroundStyle(.secondary)
+                }.font(.callout)
+            }
+        }.formStyle(.grouped).frame(width: 600, height: 760)
+        .navigationTitle(t("Ayarlar", "Settings"))
+        .sheet(isPresented: $showHelp) { QuickStartView() }
+        .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {
+            Button(t("Tamam", "OK")) { store.message = nil }
+        } message: { Text(store.message ?? "") }
+    }
+}
+
+struct QuickStartView: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Label(t("Akıntı nasıl kullanılır?", "How to use Akıntı"), systemImage: "arrow.down.circle").font(.title2.bold())
+            step("1", t("Bağlantıyı ekle", "Add a link"),
+                 t("İndirme bağlantısını kopyalayıp Akıntı’ya geçin; pencere kendiliğinden açılır. Ya da + düğmesine (⌘N) basın veya bağlantıyı pencereye sürükleyin.",
+                   "Copy a download link and switch to Akıntı; the add window opens by itself. Or press + (⌘N), or drag the link into the window."))
+            step("2", t("İndir veya zamanla", "Download or schedule"),
+                 t("İndir’e basın; Sonra indir listeye duraklatılmış ekler, Belirli saatte başlat ise planlar. Zamanlama için Akıntı açık ve Mac uyanık olmalıdır.",
+                   "Press Download. Download Later adds it paused; Start at a specific time schedules it. Akıntı must be open and the Mac awake for schedules."))
+            step("3", t("Yönet ve dosyanı bul", "Manage and find your file"),
+                 t("Soldaki kategoriler dosyaları türüne göre ayırır. Satırları seçip araç çubuğundan devam ettirin veya duraklatın; sağ tık daha fazla seçenek sunar. Tamamlanan dosyayı açmak için çift tıklayın.",
+                   "Categories on the left group files by type. Select rows and resume or pause them from the toolbar; right-click for more. Double-click a finished file to open it."))
+            Divider()
+            Text(t("Ayarlar: araç çubuğundaki dişli veya ⌘, kısayolu. Bu rehber Yardım menüsünde de bulunur.", "Settings: the gear in the toolbar or ⌘,. This guide is also in the Help menu.")).font(.callout)
+            Text(t("Video siteleri (YouTube, Vimeo ve yüzlercesi) için yt-dlp gerekir: Terminal’de brew install yt-dlp ffmpeg. Video indirirken kalite seçebilir veya yalnızca sesi alabilirsiniz. Tarayıcı uzantısı henüz yoktur.",
+                   "Video sites (YouTube, Vimeo and hundreds more) need yt-dlp: run brew install yt-dlp ffmpeg in Terminal. You can choose the quality or keep only the audio. A browser extension is not available yet."))
+                .font(.callout).foregroundStyle(.secondary)
+            HStack { Spacer(); Button(t("Anladım", "Got It")) { dismiss() }.keyboardShortcut(.defaultAction) }
+        }.padding(28).frame(width: 580)
+    }
+    private func step(_ number: String, _ title: String, _ detail: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Text(number).font(.headline).frame(width: 30, height: 30).background(.tint.opacity(0.12), in: Circle())
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline)
+                Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
