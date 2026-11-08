@@ -2,6 +2,13 @@
 
 # Akıntı
 
+<p>
+  <a href="https://github.com/future01software/akinti/releases/latest"><img alt="Son sürüm" src="https://img.shields.io/github/v/release/future01software/akinti?label=s%C3%BCr%C3%BCm&color=1f6feb"></a>
+  <a href="https://github.com/future01software/akinti/actions/workflows/swift.yml"><img alt="Testler" src="https://github.com/future01software/akinti/actions/workflows/swift.yml/badge.svg"></a>
+  <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-555?logo=apple">
+  <a href="LICENSE"><img alt="Lisans: MIT" src="https://img.shields.io/badge/lisans-MIT-green"></a>
+</p>
+
 Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yöneticisi. Doğrudan dosya bağlantılarının yanında YouTube ve diğer video sitelerinden de indirir. MIT lisanslıdır. macOS 14 veya üzeri gerekir.
 
 <p align="center"><img src="docs/ekran-ana.png" alt="Akıntı ana penceresi: kategoriler, çok bağlantılı indirmeler ve parçalı ilerleme çubuğu"></p>
