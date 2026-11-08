@@ -18,7 +18,7 @@ Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yönetic
 
 ## İndir
 
-**[⬇︎ En son sürümü indir (Akinti-macOS.zip)](https://github.com/future01software/akinti/releases/latest/download/Akinti-macOS.zip)** · [Tüm sürümler](https://github.com/future01software/akinti/releases)
+**[⬇︎ En son sürümü indir (Akinti-macOS.zip)](https://github.com/future01software/akinti/releases/latest/download/Akinti-macOS.zip)** · [Tüm sürümler](https://github.com/future01software/akinti/releases) · [Değişiklik günlüğü](CHANGELOG.md)
 
 Zip’i açıp `Akıntı.app`’i Programlar klasörüne taşıyın. Uygulama henüz Apple Developer ID ile imzalı olmadığından ilk açılışta macOS uyarı verir: uygulamaya **sağ tıklayıp Aç**’ı seçin (veya Sistem Ayarları → Gizlilik ve Güvenlik → **Yine de Aç**). Video siteleri için ayrıca `brew install yt-dlp ffmpeg` gerekir.
 
@@ -122,7 +122,7 @@ IDM’deki gibi, bir indirme başlayınca küçük bir pencere açılır: parça
 
 ## Yeni sürüm yayınlama
 
-Sürüm numarası git etiketinden gelir. Yeni bir sürüm için:
+Sürüm numarası git etiketinden gelir. Önce değişiklikleri [CHANGELOG.md](CHANGELOG.md) içinde **Yayınlanmamış** başlığının altına yazın ve başlığı `## [0.7.0] - tarih` biçiminde yeni sürüme çevirin; GitHub sürüm notları bu bölümden oluşturulur. Ardından:
 
 ```sh
 git tag v0.7.0
