@@ -1,4 +1,5 @@
 import XCTest
+import AppKit
 @testable import Akinti
 
 final class FeatureTests: XCTestCase {
@@ -41,6 +42,20 @@ final class FeatureTests: XCTestCase {
         XCTAssertFalse(prefs.menuBarOnly)
         XCTAssertFalse(prefs.torrentSeeding)
         XCTAssertTrue(prefs.showProgressWindow)
+        XCTAssertTrue(prefs.keepRunningOnDockQuit)
+    }
+
+    func testDockQuitIsDistinguishedFromLogoutAndCommandQ() {
+        let quit = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEQuitApplication),
+                                          targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID), transactionID: AETransactionID(kAnyTransactionID))
+        XCTAssertTrue(AppDelegate.isQuitAppleEventWithoutReason(quit))          // Dock'tan Çık
+        XCTAssertFalse(AppDelegate.isQuitAppleEventWithoutReason(nil))           // ⌘Q / menüden çık: olay yok
+        let logout = quit.copy() as! NSAppleEventDescriptor
+        logout.setAttribute(NSAppleEventDescriptor(enumCode: OSType(kAELogOut)), forKeyword: AEKeyword(kAEQuitReason))
+        XCTAssertFalse(AppDelegate.isQuitAppleEventWithoutReason(logout))        // oturum kapatma: gerçekten çık
+        let open = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEOpenApplication),
+                                          targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID), transactionID: AETransactionID(kAnyTransactionID))
+        XCTAssertFalse(AppDelegate.isQuitAppleEventWithoutReason(open))
     }
 
     @MainActor func testMenuBarPreferencesPersistAndNotify() throws {

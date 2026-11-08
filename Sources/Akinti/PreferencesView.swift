@@ -76,14 +76,16 @@ struct PreferencesView: View {
                 Toggle(t("Menü çubuğunda Akıntı simgesini göster", "Show the Akıntı icon in the menu bar"), isOn: $store.preferences.showMenuBarIcon)
                 Toggle(t("Pencere kapanınca yalnızca menü çubuğunda çalış", "Run only in the menu bar when the window is closed"), isOn: $store.preferences.menuBarOnly)
                     .disabled(!store.preferences.showMenuBarIcon)
+                Toggle(t("Dock’tan çıkınca menü çubuğunda çalışmaya devam et", "Keep running in the menu bar when quit from the Dock"), isOn: $store.preferences.keepRunningOnDockQuit)
+                    .disabled(!store.preferences.showMenuBarIcon)
                 Toggle(t("Mac açılınca Akıntı’yı başlat", "Open Akıntı at login"), isOn: Binding(
                     get: { launchAtLogin },
                     set: { on in
                         if let error = LaunchAtLogin.set(on) { store.message = error }
                         launchAtLogin = LaunchAtLogin.isEnabled
                     }))
-                Text(t("Menü çubuğu simgesi anlık hızı gösterir; tıklayınca indirmeleri duraklatıp sürdürebilir, yeni bağlantı ekleyebilirsiniz. Yalnızca menü çubuğu kipinde pencere kapanınca Dock simgesi gizlenir, indirmeler sürer.",
-                       "The menu bar icon shows the current speed; click it to pause or resume downloads or add a link. In menu-bar-only mode the Dock icon hides when the window closes, and downloads keep running."))
+                Text(t("Menü çubuğu simgesi anlık hızı gösterir; tıklayınca indirmeleri duraklatıp sürdürebilir, yeni bağlantı ekleyebilirsiniz. Dock’tan “Çık” denince Akıntı menü çubuğunda kalır ve indirmeler sürer; tamamen kapatmak için menü çubuğundaki “Akıntı’dan çık” ya da ⌘Q kullanın.",
+                       "The menu bar icon shows the current speed; click it to pause or resume downloads or add a link. Quitting from the Dock keeps Akıntı in the menu bar with downloads running; to quit completely use “Quit Akıntı” in the menu bar panel or ⌘Q."))
                     .font(.callout).foregroundStyle(.secondary)
             }
             Section(t("Görünüm", "Appearance")) {

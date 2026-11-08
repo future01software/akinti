@@ -449,6 +449,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(hide ? .accessory : .regular)
     }
 
+    /// Dock'tan "Çık": menü çubuğu simgesi açıksa uygulama kapanmaz; pencereler kapanır, Dock simgesi gizlenir.
+    /// ⌘Q ve menü çubuğundaki "Akıntı'dan çık" gerçekten kapatır; oturum kapatma/yeniden başlatma her zaman kapatır.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let prefs = Self.store?.preferences, prefs.showMenuBarIcon, prefs.keepRunningOnDockQuit,
+              Self.isQuitAppleEventWithoutReason(NSAppleEventManager.shared().currentAppleEvent) else { return .terminateNow }
+        for window in NSApp.windows where window.isVisible && window.level == .normal { window.close() }
+        DispatchQueue.main.async { NSApp.setActivationPolicy(.accessory) }
+        return .terminateCancel
+    }
+
+    /// Dock (veya başka bir uygulama) "çık" Apple olayı gönderdiyse true. ⌘Q ve menüden çıkışta olay yoktur;
+    /// oturum kapatma, yeniden başlatma ve kapatmada olayın içinde bir "çıkış nedeni" bulunur.
+    static func isQuitAppleEventWithoutReason(_ event: NSAppleEventDescriptor?) -> Bool {
+        guard let event, event.eventClass == AEEventClass(kCoreEventClass), event.eventID == AEEventID(kAEQuitApplication) else { return false }
+        return event.attributeDescriptor(forKeyword: AEKeyword(kAEQuitReason)) == nil
+    }
+
     /// Dock simgesine tıklanınca pencere yoksa SwiftUI yeni ana pencere açar.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { true }
     func application(_ application: NSApplication, open urls: [URL]) {

@@ -21,6 +21,8 @@ struct Preferences: Codable, Equatable {
     var showMenuBarIcon = true
     /// Ana pencere kapanınca Dock simgesini gizle; yalnızca menü çubuğunda çalış.
     var menuBarOnly = false
+    /// Dock'tan "Çık" denince kapanma; menü çubuğunda çalışmaya devam et.
+    var keepRunningOnDockQuit = true
 
     init(destinationPath: String) { self.destinationPath = destinationPath }
 
@@ -39,6 +41,7 @@ struct Preferences: Codable, Equatable {
         torrentSeeding = try c.decodeIfPresent(Bool.self, forKey: .torrentSeeding) ?? false
         showMenuBarIcon = try c.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
         menuBarOnly = try c.decodeIfPresent(Bool.self, forKey: .menuBarOnly) ?? false
+        keepRunningOnDockQuit = try c.decodeIfPresent(Bool.self, forKey: .keepRunningOnDockQuit) ?? true
     }
 
     static var standard: Preferences {

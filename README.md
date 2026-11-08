@@ -125,7 +125,7 @@ swift scripts/make-icon.swift Assets/AppIcon-1024.png
 
 ## Menü çubuğu
 
-Akıntı menü çubuğunda (üst bar) bir simge gösterir; indirme sürerken yanında anlık hız yazar. Simgeye tıklayınca aktif indirmeleri duraklatıp sürdürebilir, hız sınırını değiştirebilir, yeni bağlantı ekleyebilirsiniz. Ayarlar → Menü çubuğu ve başlangıç bölümünden simge gizlenebilir, **yalnızca menü çubuğunda çalışma** (pencere kapanınca Dock simgesi gizlenir) ve **Mac açılınca başlatma** açılabilir. Bartender, Barbee gibi menü çubuğu düzenleyiciler yeni simgeleri gizli bölüme koyabilir; simgeyi görünür bölüme sürükleyin.
+Akıntı menü çubuğunda (üst bar) bir simge gösterir; indirme sürerken yanında anlık hız yazar. Simgeye tıklayınca aktif indirmeleri duraklatıp sürdürebilir, hız sınırını değiştirebilir, yeni bağlantı ekleyebilirsiniz. Ayarlar → Menü çubuğu ve başlangıç bölümünden simge gizlenebilir, **yalnızca menü çubuğunda çalışma** (pencere kapanınca Dock simgesi gizlenir) ve **Mac açılınca başlatma** açılabilir. Dock’tan “Çık” denince Akıntı kapanmaz, menü çubuğunda çalışmaya devam eder; tamamen kapatmak için menü çubuğundaki **Akıntı’dan çık** ya da **⌘Q** kullanın (Ayarlar’dan değiştirilebilir). Bartender, Barbee gibi menü çubuğu düzenleyiciler yeni simgeleri gizli bölüme koyabilir; simgeyi görünür bölüme sürükleyin.
 
 ## İndirme penceresi
 

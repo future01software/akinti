@@ -6,6 +6,12 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.8.2] - 2026-11-08
+
+### Değişti
+- **Dock'tan "Çık" denince Akıntı kapanmaz**: pencereler kapanır, Dock simgesi gizlenir, menü çubuğu simgesi ve indirmeler sürer. Tamamen kapatmak için menü çubuğundaki **Akıntı'dan çık** ya da **⌘Q**. Oturum kapatma, yeniden başlatma ve kapatmada her zaman normal şekilde kapanır.
+- Ayarlar → Menü çubuğu ve başlangıç: “Dock’tan çıkınca menü çubuğunda çalışmaya devam et” (varsayılan açık).
+
 ## [0.8.1] - 2026-11-08
 
 ### Düzeltildi
@@ -128,7 +134,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.1...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/future01software/akinti/releases/tag/v0.8.2
 [0.8.1]: https://github.com/future01software/akinti/releases/tag/v0.8.1
 [0.8.0]: https://github.com/future01software/akinti/releases/tag/v0.8.0
 [0.7.0]: https://github.com/future01software/akinti/releases/tag/v0.7.0
