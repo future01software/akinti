@@ -6,6 +6,20 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.8.0] - 2026-11-08
+
+### Eklendi
+- **Menü çubuğu (üst bar) simgesi**: indirme varken yanında anlık toplam hız.
+- Simgeye tıklayınca açılan panel: aktif indirmeler ve ilerlemeleri, tek tek duraklat/devam, Tümünü başlat/duraklat, hız sınırı, bağlantı ekle, Akıntı'yı aç, Ayarlar, Çık.
+- **Yalnızca menü çubuğunda çalışma** seçeneği: ana pencere kapanınca Dock simgesi gizlenir, indirmeler sürer (varsayılan kapalı).
+- **Mac açılınca Akıntı'yı başlat** seçeneği (macOS Giriş Öğeleri).
+- Ayarlar → Menü çubuğu ve başlangıç bölümü.
+
+### Düzeltildi
+- Uygulamanın açılışta ara sıra çökmesi (SwiftUI gövdesi sadeleştirildi; menü komutları ayrı yapıya taşındı).
+- Menü çubuğu öğesinin ayarı sürekli yeniden yazmasıyla oluşan yüksek işlemci kullanımı.
+- Değişmeyen ayarların gereksiz yere diske yazılması.
+
 ## [0.7.0] - 2026-11-08
 
 ### Eklendi
@@ -108,5 +122,6 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.7.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/future01software/akinti/releases/tag/v0.8.0
 [0.7.0]: https://github.com/future01software/akinti/releases/tag/v0.7.0

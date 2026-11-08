@@ -123,6 +123,10 @@ Kaynaklarda üçüncü taraf Swift bağımlılığı yoktur; video siteleri içi
 swift scripts/make-icon.swift Assets/AppIcon-1024.png
 ```
 
+## Menü çubuğu
+
+Akıntı menü çubuğunda (üst bar) bir simge gösterir; indirme sürerken yanında anlık hız yazar. Simgeye tıklayınca aktif indirmeleri duraklatıp sürdürebilir, hız sınırını değiştirebilir, yeni bağlantı ekleyebilirsiniz. Ayarlar → Menü çubuğu ve başlangıç bölümünden simge gizlenebilir, **yalnızca menü çubuğunda çalışma** (pencere kapanınca Dock simgesi gizlenir) ve **Mac açılınca başlatma** açılabilir. Bartender, Barbee gibi menü çubuğu düzenleyiciler yeni simgeleri gizli bölüme koyabilir; simgeyi görünür bölüme sürükleyin.
+
 ## İndirme penceresi
 
 IDM’deki gibi, bir indirme başlayınca küçük bir pencere açılır: parçalı ilerleme çubuğu, hız, kalan süre, bağlantı sayısı ve Duraklat/İptal düğmeleri. İndirme bitince pencere “İndirme tamamlandı” ekranına döner (Aç, Finder’da göster). Bir seferde 3’ten fazla indirme eklenirse (ör. oynatma listesi) açılmaz. Ayarlar’dan veya penceredeki “Bu pencereyi bir daha gösterme” kutusundan kapatılabilir.

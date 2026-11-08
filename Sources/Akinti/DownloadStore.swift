@@ -57,7 +57,11 @@ final class DownloadStore: ObservableObject {
     static let maxPopupsPerAdd = 3
     @Published var preferences: Preferences {
         didSet {
+            guard preferences != oldValue else { return } // aynı değer: kaydetme, yeniden başlatma yok
             L10n.preference = preferences.language
+            if preferences.menuBarOnly != oldValue.menuBarOnly || preferences.showMenuBarIcon != oldValue.showMenuBarIcon {
+                NotificationCenter.default.post(name: DownloadStore.dockPolicyChanged, object: nil)
+            }
             limiter.bytesPerSecond = Double(preferences.speedLimitKB) * 1024
             savePreferences()
             if preferences.simultaneousDownloads > oldValue.simultaneousDownloads { pump() }
@@ -67,6 +71,7 @@ final class DownloadStore: ObservableObject {
         }
     }
 
+    static let dockPolicyChanged = Notification.Name("AkintiDockPolicyChanged")
     let limiter = RateLimiter()
     private var httpJobs: [UUID: HTTPJob] = [:]
     private var videoJobs: [UUID: VideoJob] = [:]

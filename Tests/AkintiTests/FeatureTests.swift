@@ -37,6 +37,23 @@ final class FeatureTests: XCTestCase {
         let prefs = try JSONDecoder().decode(Preferences.self, from: Data(json.utf8))
         XCTAssertEqual(prefs.simultaneousDownloads, 4)
         XCTAssertTrue(prefs.clipboardCapture)
+        XCTAssertTrue(prefs.showMenuBarIcon)
+        XCTAssertFalse(prefs.menuBarOnly)
+        XCTAssertFalse(prefs.torrentSeeding)
+        XCTAssertTrue(prefs.showProgressWindow)
+    }
+
+    @MainActor func testMenuBarPreferencesPersistAndNotify() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = DownloadStore(directory: root, destination: root.appendingPathComponent("files"))
+        let notified = expectation(forNotification: DownloadStore.dockPolicyChanged, object: nil)
+        store.preferences.menuBarOnly = true
+        wait(for: [notified], timeout: 1)
+        store.preferences.showMenuBarIcon = false
+        let restored = DownloadStore(directory: root)
+        XCTAssertTrue(restored.preferences.menuBarOnly)
+        XCTAssertFalse(restored.preferences.showMenuBarIcon)
     }
 
     @MainActor func testLanguageSwitchesInstantly() throws {

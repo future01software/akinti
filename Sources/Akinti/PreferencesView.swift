@@ -10,6 +10,7 @@ extension Preferences {
 struct PreferencesView: View {
     @ObservedObject var store: DownloadStore
     @State private var showHelp = false
+    @State private var launchAtLogin = LaunchAtLogin.isEnabled
     var body: some View {
         Form {
             Section(t("Dil", "Language")) {
@@ -71,6 +72,20 @@ struct PreferencesView: View {
                 Text(t("Bir dosya bağlantısını kopyalayıp Akıntı’ya geçtiğinizde ekleme penceresi kendiliğinden açılır. Bağlantıları pencereye sürükleyip bırakabilirsiniz de.", "When you copy a file link and switch to Akıntı, the add window opens automatically. You can also drag links into the window."))
                     .font(.callout).foregroundStyle(.secondary)
             }
+            Section(t("Menü çubuğu ve başlangıç", "Menu bar and startup")) {
+                Toggle(t("Menü çubuğunda Akıntı simgesini göster", "Show the Akıntı icon in the menu bar"), isOn: $store.preferences.showMenuBarIcon)
+                Toggle(t("Pencere kapanınca yalnızca menü çubuğunda çalış", "Run only in the menu bar when the window is closed"), isOn: $store.preferences.menuBarOnly)
+                    .disabled(!store.preferences.showMenuBarIcon)
+                Toggle(t("Mac açılınca Akıntı’yı başlat", "Open Akıntı at login"), isOn: Binding(
+                    get: { launchAtLogin },
+                    set: { on in
+                        if let error = LaunchAtLogin.set(on) { store.message = error }
+                        launchAtLogin = LaunchAtLogin.isEnabled
+                    }))
+                Text(t("Menü çubuğu simgesi anlık hızı gösterir; tıklayınca indirmeleri duraklatıp sürdürebilir, yeni bağlantı ekleyebilirsiniz. Yalnızca menü çubuğu kipinde pencere kapanınca Dock simgesi gizlenir, indirmeler sürer.",
+                       "The menu bar icon shows the current speed; click it to pause or resume downloads or add a link. In menu-bar-only mode the Dock icon hides when the window closes, and downloads keep running."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             Section(t("Görünüm", "Appearance")) {
                 Picker(t("Tema", "Theme"), selection: $store.preferences.appearance) {
                     Text(t("Sistem", "System")).tag("system")
@@ -88,7 +103,7 @@ struct PreferencesView: View {
                     Text("Akıntı " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")).foregroundStyle(.secondary)
                 }.font(.callout)
             }
-        }.formStyle(.grouped).frame(width: 600, height: 820)
+        }.formStyle(.grouped).frame(width: 600, height: 840)
         .navigationTitle(t("Ayarlar", "Settings"))
         .sheet(isPresented: $showHelp) { QuickStartView() }
         .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {

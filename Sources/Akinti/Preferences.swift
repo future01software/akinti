@@ -1,6 +1,6 @@
 import Foundation
 
-struct Preferences: Codable {
+struct Preferences: Codable, Equatable {
     var destinationPath: String
     var simultaneousDownloads = 3
     var retryLimit = 3
@@ -17,6 +17,10 @@ struct Preferences: Codable {
     var showProgressWindow = true
     /// Torrent bitince paylaşmaya (seed) devam et.
     var torrentSeeding = false
+    /// Menü çubuğunda (üst bar) Akıntı simgesi.
+    var showMenuBarIcon = true
+    /// Ana pencere kapanınca Dock simgesini gizle; yalnızca menü çubuğunda çalış.
+    var menuBarOnly = false
 
     init(destinationPath: String) { self.destinationPath = destinationPath }
 
@@ -33,6 +37,8 @@ struct Preferences: Codable {
         speedLimitKB = try c.decodeIfPresent(Int.self, forKey: .speedLimitKB) ?? 0
         showProgressWindow = try c.decodeIfPresent(Bool.self, forKey: .showProgressWindow) ?? true
         torrentSeeding = try c.decodeIfPresent(Bool.self, forKey: .torrentSeeding) ?? false
+        showMenuBarIcon = try c.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
+        menuBarOnly = try c.decodeIfPresent(Bool.self, forKey: .menuBarOnly) ?? false
     }
 
     static var standard: Preferences {

@@ -64,6 +64,7 @@ struct ContentView: View {
         .onChange(of: store.popupRequests) { _, _ in openRequestedPopups() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in captureClipboard() }
         .onAppear {
+            NSApp.setActivationPolicy(.regular) // ana pencere görünürken Dock simgesi her zaman vardır
             openRequestedPopups() // pencere açılmadan önce eklenen indirmeler için
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
             if CommandLine.arguments.contains("--select-first"), let first = visible.first(where: { $0.state == "İndiriliyor" }) ?? visible.first { selection = [first.id] }
@@ -432,6 +433,24 @@ struct PieceBar: View {
 /// Web sayfaları kendi başına indirme başlatamasın diye magnet bağlantıları önce ekleme penceresinde gösterilir.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var store: DownloadStore?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // "Yalnızca menü çubuğunda" kipinde ana pencere kapanınca Dock simgesi gizlenir.
+        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
+            guard let window = note.object as? NSWindow, MainWindow.isMainWindow(window) else { return }
+            DispatchQueue.main.async { Self.updateDockIcon() }
+        }
+        NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { _ in Self.updateDockIcon() }
+    }
+
+    static func updateDockIcon() {
+        guard let prefs = store?.preferences else { return }
+        let hide = prefs.menuBarOnly && prefs.showMenuBarIcon && MainWindow.existing == nil
+        NSApp.setActivationPolicy(hide ? .accessory : .regular)
+    }
+
+    /// Dock simgesine tıklanınca pencere yoksa SwiftUI yeni ana pencere açar.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { true }
     func application(_ application: NSApplication, open urls: [URL]) {
         guard let store = Self.store else { return }
         var links: [URL] = []
@@ -464,44 +483,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppDelegate.store = store
         _store = StateObject(wrappedValue: store)
     }
+    // Not: Gövde bilerek sade tutulur. Her pencerenin içeriği ve menü komutları ayrı türlerdedir;
+    // aksi halde SwiftUI'nin iç içe tür bilgisi çok derinleşip açılışta yığın taşmasına yol açabiliyor.
     var body: some Scene {
-        WindowGroup {
-            ContentView(store: store)
-                .id(store.preferences.language) // dil değişince tüm metinler yeniden çizilir
-                .environment(\.locale, L10n.locale)
-                .preferredColorScheme(store.preferences.colorScheme)
+        WindowGroup(id: "main") { Themed(store: store) { ContentView(store: store) } }
+            .defaultSize(width: 1120, height: 700)
+            .windowToolbarStyle(.unified(showsTitle: true))
+            .commands { AkintiCommands(store: store) }
+        // Menü çubuğu (üst bar) simgesi ve paneli.
+        // Sistem bu değeri her güncellemede geri yazar; yalnızca gerçekten değiştiyse kaydedilir (aksi halde sonsuz döngü).
+        MenuBarExtra(isInserted: Binding(get: { store.preferences.showMenuBarIcon },
+                                         set: { if $0 != store.preferences.showMenuBarIcon { store.preferences.showMenuBarIcon = $0 } })) {
+            Themed(store: store, appliesColorScheme: false) { MenuBarPanel(store: store) }
+        } label: {
+            MenuBarLabel(store: store)
         }
-        .defaultSize(width: 1120, height: 700)
-        .windowToolbarStyle(.unified(showsTitle: true))
-        .commands {
-            CommandGroup(replacing: .newItem) {
-                Button(t("Bağlantı ekle…", "Add Link…")) { store.isAdding = true }.keyboardShortcut("n")
-                Button(t("Torrent dosyası aç…", "Open Torrent File…")) { TorrentFilePicker.choose(for: store) }.keyboardShortcut("o")
-            }
-            CommandMenu(t("İndirmeler", "Downloads")) {
-                Button(t("Tümünü başlat", "Start All")) { store.resumeAll() }.keyboardShortcut("r", modifiers: [.command, .shift])
-                Button(t("Tümünü duraklat", "Pause All")) { store.pauseAll() }.keyboardShortcut("p", modifiers: [.command, .shift])
-                Divider()
-                Button(t("Tamamlananları listeden temizle", "Clear Completed")) { store.clearCompleted() }
-            }
-            CommandGroup(replacing: .help) {
-                Button(t("Akıntı nasıl kullanılır?", "How to Use Akıntı")) { store.isShowingHelp = true }
-            }
-        }
+        .menuBarExtraStyle(.window)
         // IDM tarzı indirme penceresi (her indirme için bir tane).
-        WindowGroup(id: "download", for: UUID.self) { $id in
-            DownloadPopup(store: store, id: id)
-                .id(store.preferences.language)
-                .environment(\.locale, L10n.locale)
-                .preferredColorScheme(store.preferences.colorScheme)
+        WindowGroup(id: "download", for: UUID.self) { $id in Themed(store: store) { DownloadPopup(store: store, id: id) } }
+            .windowResizability(.contentSize)
+            .defaultPosition(.topTrailing)
+        Settings { Themed(store: store) { PreferencesView(store: store) } }
+    }
+}
+
+/// Dil, yerel ayar ve tema: dil değişince içerik yeniden çizilir.
+struct Themed<Content: View>: View {
+    @ObservedObject var store: DownloadStore
+    var appliesColorScheme = true
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        content()
+            .id(store.preferences.language)
+            .environment(\.locale, L10n.locale)
+            .preferredColorScheme(appliesColorScheme ? store.preferences.colorScheme : nil)
+    }
+}
+
+/// Menü çubuğundaki Dosya, İndirmeler ve Yardım komutları.
+struct AkintiCommands: Commands {
+    @ObservedObject var store: DownloadStore
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            Button(t("Bağlantı ekle…", "Add Link…")) { store.isAdding = true }.keyboardShortcut("n")
+            Button(t("Torrent dosyası aç…", "Open Torrent File…")) { TorrentFilePicker.choose(for: store) }.keyboardShortcut("o")
         }
-        .windowResizability(.contentSize)
-        .defaultPosition(.topTrailing)
-        Settings {
-            PreferencesView(store: store)
-                .id(store.preferences.language)
-                .environment(\.locale, L10n.locale)
-                .preferredColorScheme(store.preferences.colorScheme)
+        CommandMenu(t("İndirmeler", "Downloads")) {
+            Button(t("Tümünü başlat", "Start All")) { store.resumeAll() }.keyboardShortcut("r", modifiers: [.command, .shift])
+            Button(t("Tümünü duraklat", "Pause All")) { store.pauseAll() }.keyboardShortcut("p", modifiers: [.command, .shift])
+            Divider()
+            Button(t("Tamamlananları listeden temizle", "Clear Completed")) { store.clearCompleted() }
+        }
+        CommandGroup(replacing: .help) {
+            Button(t("Akıntı nasıl kullanılır?", "How to Use Akıntı")) { store.isShowingHelp = true }
         }
     }
 }
