@@ -47,6 +47,10 @@ struct PreferencesView: View {
                 Text(t("Tüm indirmelerin toplam hızını sınırlar; alt çubuktan da değiştirilebilir. Video indirmelerinde yeni başlayanlara uygulanır.",
                        "Limits the combined speed of all downloads; also available in the status bar. For videos it applies to newly started downloads."))
                     .font(.callout).foregroundStyle(.secondary)
+                Toggle(t("İndirme başlayınca ilerleme penceresini göster", "Show the progress window when a download starts"), isOn: $store.preferences.showProgressWindow)
+                Text(t("IDM’deki gibi küçük bir pencere hız, kalan süre ve bağlantıları gösterir; indirme bitince dosyayı açmayı önerir. Bir seferde 3’ten fazla indirme eklenirse açılmaz.",
+                       "Like IDM, a small window shows speed, time left and connections, and offers to open the file when it finishes. It doesn’t open when more than 3 downloads are added at once."))
+                    .font(.callout).foregroundStyle(.secondary)
                 Picker(t("Otomatik yeniden deneme", "Automatic retry"), selection: $store.preferences.retryLimit) {
                     Text(t("Kapalı", "Off")).tag(0)
                     ForEach(1...5, id: \.self) { Text(t("En fazla \($0) kez", "Up to \($0) times")).tag($0) }
@@ -73,10 +77,10 @@ struct PreferencesView: View {
                 HStack {
                     Label(t("Ayarlar otomatik kaydedilir", "Settings are saved automatically"), systemImage: "checkmark.circle").foregroundStyle(.secondary)
                     Spacer()
-                    Text("Akıntı 0.5.0").foregroundStyle(.secondary)
+                    Text("Akıntı " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")).foregroundStyle(.secondary)
                 }.font(.callout)
             }
-        }.formStyle(.grouped).frame(width: 600, height: 760)
+        }.formStyle(.grouped).frame(width: 600, height: 800)
         .navigationTitle(t("Ayarlar", "Settings"))
         .sheet(isPresented: $showHelp) { QuickStartView() }
         .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {

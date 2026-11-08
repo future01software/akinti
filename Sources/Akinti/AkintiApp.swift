@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var confirmTrash = false
     @State private var lastPasteboardChange = NSPasteboard.general.changeCount
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
 
     private var current: SidebarSelection { sidebar ?? .all }
     private var visible: [Download] {
@@ -58,8 +59,10 @@ struct ContentView: View {
             Button(t("Dosyaları Çöp Sepeti’ne taşı", "Move files to Trash"), role: .destructive) { removeSelection(trash: true) }
         } message: { Text(t("Çöp Sepeti’ne taşınan dosyalar Finder’dan geri alınabilir.", "Files moved to Trash can be restored from Finder.")) }
         .onChange(of: activeCount) { _, n in NSApp?.dockTile.badgeLabel = n > 0 ? "\(n)" : nil }
+        .onChange(of: store.popupRequests) { _, _ in openRequestedPopups() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in captureClipboard() }
         .onAppear {
+            openRequestedPopups() // pencere açılmadan önce eklenen indirmeler için
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
             if CommandLine.arguments.contains("--select-first"), let first = visible.first(where: { $0.state == "İndiriliyor" }) ?? visible.first { selection = [first.id] }
             if CommandLine.arguments.contains("--open-settings") {
@@ -238,6 +241,13 @@ struct ContentView: View {
     }
 
     // MARK: Yardımcılar
+
+    private func openRequestedPopups() {
+        let ids = store.popupRequests
+        guard !ids.isEmpty else { return }
+        store.popupRequests = []
+        for id in ids { openWindow(id: "download", value: id) }
+    }
 
     private func removeSelection(trash: Bool) {
         store.remove(selection, trashFiles: trash)
@@ -433,6 +443,15 @@ struct SegmentBar: View {
                 Button(t("Akıntı nasıl kullanılır?", "How to Use Akıntı")) { store.isShowingHelp = true }
             }
         }
+        // IDM tarzı indirme penceresi (her indirme için bir tane).
+        WindowGroup(id: "download", for: UUID.self) { $id in
+            DownloadPopup(store: store, id: id)
+                .id(store.preferences.language)
+                .environment(\.locale, L10n.locale)
+                .preferredColorScheme(store.preferences.colorScheme)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.topTrailing)
         Settings {
             PreferencesView(store: store)
                 .id(store.preferences.language)

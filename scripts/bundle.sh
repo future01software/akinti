@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Sürüm: VERSION ortam değişkeni (GitHub'da etiketten gelir, ör. v0.7.0 -> 0.7.0); yoksa son git etiketi; o da yoksa 0.0.0-dev.
+VERSION="${VERSION:-$( (git describe --tags --abbrev=0 2>/dev/null || true) | sed 's/^v//')}"
+VERSION="${VERSION:-0.0.0-dev}"
 BUILD_OPTIONS=(--scratch-path .build/bundle)
 case "$(swift build --help)" in
     *swiftbuild*) BUILD_OPTIONS+=(--build-system swiftbuild) ;;
@@ -14,7 +17,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/Akinti" "$APP/Contents/MacOS/Akinti"
 # Simge: scripts/make-icon.swift ile üretilir (bkz. README).
 cp Assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -23,7 +26,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Akıntı</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.5.0</string>
+<key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
@@ -43,4 +46,4 @@ with zipfile.ZipFile(sys.argv[2], 'w', zipfile.ZIP_DEFLATED) as archive:
 PYZIP
 # Keep a convenient local app alongside the verified distribution archive.
 /usr/bin/ditto --norsrc --noextattr "$APP" "dist/Akıntı.app"
-echo "Hazır: dist/Akinti-macOS.zip (imzası doğrulanmış paket)"
+echo "Hazır: dist/Akinti-macOS.zip (sürüm $VERSION, imzası doğrulanmış paket)"

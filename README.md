@@ -10,7 +10,17 @@ Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yönetic
 |---|---|
 | <img src="docs/ekran-video.png" alt="Bir YouTube videosunun önizlemesini ve kalite seçimini gösteren ekleme penceresi"> | <img src="docs/ekran-ayarlar.png" alt="Dil, bağlantı sayısı ve hız sınırı ayarları"> |
 
+| İndirme penceresi | Tamamlandı |
+|---|---|
+| <img src="docs/ekran-indirme-penceresi.png" alt="IDM tarzı indirme penceresi: parçalı çubuk, hız, kalan süre, duraklat"> | <img src="docs/ekran-tamamlandi.png" alt="İndirme tamamlandı penceresi: Aç, Finder’da göster"> |
+
 <p align="center"><img src="docs/screen-english-light.png" width="80%" alt="English interface in light mode"><br><sub>İngilizce arayüz, açık tema</sub></p>
+
+## İndir
+
+**[⬇︎ En son sürümü indir (Akinti-macOS.zip)](https://github.com/future01software/akinti/releases/latest/download/Akinti-macOS.zip)** · [Tüm sürümler](https://github.com/future01software/akinti/releases)
+
+Zip’i açıp `Akıntı.app`’i Programlar klasörüne taşıyın. Uygulama henüz Apple Developer ID ile imzalı olmadığından ilk açılışta macOS uyarı verir: uygulamaya **sağ tıklayıp Aç**’ı seçin (veya Sistem Ayarları → Gizlilik ve Güvenlik → **Yine de Aç**). Video siteleri için ayrıca `brew install yt-dlp ffmpeg` gerekir.
 
 ## Çalıştırma
 
@@ -99,6 +109,21 @@ Kaynaklarda üçüncü taraf Swift bağımlılığı yoktur; video siteleri içi
 ```sh
 swift scripts/make-icon.swift Assets/AppIcon-1024.png
 ```
+
+## İndirme penceresi
+
+IDM’deki gibi, bir indirme başlayınca küçük bir pencere açılır: parçalı ilerleme çubuğu, hız, kalan süre, bağlantı sayısı ve Duraklat/İptal düğmeleri. İndirme bitince pencere “İndirme tamamlandı” ekranına döner (Aç, Finder’da göster). Bir seferde 3’ten fazla indirme eklenirse (ör. oynatma listesi) açılmaz. Ayarlar’dan veya penceredeki “Bu pencereyi bir daha gösterme” kutusundan kapatılabilir.
+
+## Yeni sürüm yayınlama
+
+Sürüm numarası git etiketinden gelir. Yeni bir sürüm için:
+
+```sh
+git tag v0.7.0
+git push origin v0.7.0
+```
+
+GitHub Actions testleri çalıştırır, uygulamayı paketler ve sürümü **aynı dosya adıyla** (`Akinti-macOS.zip`) yayınlar; yukarıdaki “En son sürümü indir” bağlantısı her zaman en yeni sürümü indirir.
 
 ## Geliştirici seçenekleri
 

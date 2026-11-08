@@ -13,6 +13,8 @@ struct Preferences: Codable {
     var connectionsPerDownload = 8
     /// Toplam hız sınırı, KB/sn. 0 = sınırsız.
     var speedLimitKB = 0
+    /// İndirme başlayınca IDM tarzı ilerleme penceresi aç.
+    var showProgressWindow = true
 
     init(destinationPath: String) { self.destinationPath = destinationPath }
 
@@ -27,6 +29,7 @@ struct Preferences: Codable {
         language = try c.decodeIfPresent(String.self, forKey: .language) ?? "system"
         connectionsPerDownload = try c.decodeIfPresent(Int.self, forKey: .connectionsPerDownload) ?? 8
         speedLimitKB = try c.decodeIfPresent(Int.self, forKey: .speedLimitKB) ?? 0
+        showProgressWindow = try c.decodeIfPresent(Bool.self, forKey: .showProgressWindow) ?? true
     }
 
     static var standard: Preferences {

@@ -42,6 +42,10 @@ final class DownloadStore: ObservableObject {
     @Published var isAdding = false
     @Published var isShowingHelp = false
     @Published var pendingLinks = ""
+    /// Açılması istenen indirme pencereleri (arayüz okuyup boşaltır).
+    @Published var popupRequests: [UUID] = []
+    /// Bir seferde bundan fazla indirme eklenirse (ör. oynatma listesi) pencere açılmaz.
+    static let maxPopupsPerAdd = 3
     @Published var preferences: Preferences {
         didSet {
             L10n.preference = preferences.language
@@ -173,6 +177,7 @@ final class DownloadStore: ObservableObject {
             if let date = scheduledAt, date > Date() { item.scheduledAt = date; item.state = "Planlandı" }
             else if startPaused { item.state = "Duraklatıldı" }
             items.append(item)
+            if preferences.showProgressWindow, item.state == "Bekliyor", urls.count <= Self.maxPopupsPerAdd { popupRequests.append(item.id) }
         }
         persist(); pump(); return true
     }

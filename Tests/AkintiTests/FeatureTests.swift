@@ -52,4 +52,26 @@ final class FeatureTests: XCTestCase {
         XCTAssertEqual(Format.eta(90), "1 dk 30 sn")
         XCTAssertEqual(DownloadStore(directory: root).preferences.language, "tr")
     }
+
+    @MainActor func testProgressWindowRequests() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = DownloadStore(directory: root, destination: root.appendingPathComponent("files"))
+        XCTAssertTrue(store.preferences.showProgressWindow)
+        XCTAssertTrue(store.add("http://127.0.0.1:9/a.zip", scheduledAt: .distantFuture)) // planlı: pencere yok
+        XCTAssertTrue(store.popupRequests.isEmpty)
+        XCTAssertTrue(store.add("http://127.0.0.1:9/b.zip", startPaused: true))           // sonra indir: pencere yok
+        XCTAssertTrue(store.popupRequests.isEmpty)
+        store.preferences.simultaneousDownloads = 1
+        store.pauseAll()
+        XCTAssertTrue(store.add("http://127.0.0.1:9/c.zip\nhttp://127.0.0.1:9/d.zip"))   // hemen indirilecek: 2 pencere
+        XCTAssertEqual(store.popupRequests.count, 2)
+        store.popupRequests = []
+        XCTAssertTrue(store.add((1...4).map { "http://127.0.0.1:9/\($0).zip" }.joined(separator: "\n"))) // 4 > 3: pencere yok
+        XCTAssertTrue(store.popupRequests.isEmpty)
+        store.preferences.showProgressWindow = false
+        XCTAssertTrue(store.add("http://127.0.0.1:9/e.zip"))
+        XCTAssertTrue(store.popupRequests.isEmpty)
+        store.pauseAll()
+    }
 }
