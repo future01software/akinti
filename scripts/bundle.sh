@@ -29,6 +29,17 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
+<key>CFBundleURLTypes</key><array><dict>
+  <key>CFBundleURLName</key><string>org.akinti.magnet</string>
+  <key>CFBundleURLSchemes</key><array><string>magnet</string></array>
+</dict></array>
+<key>CFBundleDocumentTypes</key><array><dict>
+  <key>CFBundleTypeName</key><string>BitTorrent</string>
+  <key>CFBundleTypeRole</key><string>Viewer</string>
+  <key>LSHandlerRank</key><string>Alternate</string>
+  <key>CFBundleTypeExtensions</key><array><string>torrent</string></array>
+  <key>LSItemContentTypes</key><array><string>org.bittorrent.torrent</string></array>
+</dict></array>
 </dict></plist>
 PLIST
 xattr -cr "$APP"

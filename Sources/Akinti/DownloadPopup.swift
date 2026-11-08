@@ -20,11 +20,15 @@ struct DownloadPopup: View {
                 default: progress(item)
                 }
             } else {
-                // İndirme listeden kaldırıldıysa pencere kendini kapatır.
-                Color.clear.frame(width: 1, height: 1).onAppear { dismiss() }
+                Color.clear.frame(width: 1, height: 1)
             }
         }
         .frame(width: 480)
+        // Bu pencereler macOS tarafından geri yüklenmez; indirmesi olmayan (silinmiş) pencere hemen kapanır.
+        .background(WindowAccessor { window in
+            window.isRestorable = false
+            if item == nil { DispatchQueue.main.async { window.close() } }
+        })
         .navigationTitle(item?.name ?? "Akıntı")
     }
 
@@ -32,9 +36,11 @@ struct DownloadPopup: View {
 
     private func progress(_ d: Download) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            header(d, subtitle: d.source.host ?? d.source.absoluteString)
+            header(d, subtitle: d.isTorrent == true ? "BitTorrent · " + (TorrentEngine.isMagnet(d.source) ? "Magnet" : d.source.lastPathComponent) : d.source.host ?? d.source.absoluteString)
             VStack(alignment: .leading, spacing: 6) {
-                if let segments = d.segments, segments.count > 1 {
+                if let map = d.pieceMap {
+                    PieceBar(map: map, tint: tint(d))
+                } else if let segments = d.segments, segments.count > 1 {
                     SegmentBar(segments: segments, tint: tint(d))
                 } else {
                     ProgressView(value: d.progress).tint(tint(d))
@@ -52,7 +58,11 @@ struct DownloadPopup: View {
                 }
                 GridRow {
                     stat(t("Kalan süre", "Time left"), store.eta(for: d).map(Format.eta) ?? "—")
-                    stat(t("Bağlantı", "Connections"), d.segments.map { "\($0.filter { !$0.isDone }.count) / \($0.count)" } ?? (d.isVideo == true ? "yt-dlp" : "1"))
+                    if d.isTorrent == true {
+                        stat(t("Kaynak / Eş", "Seeds / Peers"), "\(d.seeders ?? 0) / \(d.peers ?? 0)")
+                    } else {
+                        stat(t("Bağlantı", "Connections"), d.segments.map { "\($0.filter { !$0.isDone }.count) / \($0.count)" } ?? (d.isVideo == true ? "yt-dlp" : "1"))
+                    }
                 }
             }
             Divider()
@@ -147,5 +157,21 @@ struct DownloadPopup: View {
 
     private func tint(_ d: Download) -> Color {
         StatusCell.color(d.state) == .secondary ? Color.accentColor : StatusCell.color(d.state)
+    }
+}
+
+/// SwiftUI görünümünün bulunduğu NSWindow'a erişim (geri yükleme ayarı ve kapatma için).
+struct WindowAccessor: NSViewRepresentable {
+    let onWindow: (NSWindow) -> Void
+    func makeNSView(context: Context) -> NSView { Probe(onWindow: onWindow) }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+    final class Probe: NSView {
+        let onWindow: (NSWindow) -> Void
+        init(onWindow: @escaping (NSWindow) -> Void) { self.onWindow = onWindow; super.init(frame: .zero) }
+        required init?(coder: NSCoder) { nil }
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let window { onWindow(window) }
+        }
     }
 }

@@ -41,8 +41,10 @@ struct ContentView: View {
             .searchable(text: $search, placement: .toolbar, prompt: t("Dosya veya site ara", "Search files or sites"))
             .toolbar { toolbarContent }
             .dropDestination(for: URL.self) { urls, _ in
-                let links = urls.filter { ["http", "https"].contains($0.scheme?.lowercased() ?? "") }
-                guard !links.isEmpty else { return false }
+                let torrents = urls.filter { $0.isFileURL && $0.pathExtension.lowercased() == "torrent" }
+                for file in torrents { store.addTorrentFile(file) }
+                let links = urls.filter { ["http", "https"].contains($0.scheme?.lowercased() ?? "") || TorrentEngine.isMagnet($0) }
+                guard !links.isEmpty else { return !torrents.isEmpty }
                 store.pendingLinks = links.map(\.absoluteString).joined(separator: "\n")
                 store.isAdding = true
                 return true
@@ -120,7 +122,7 @@ struct ContentView: View {
                     FileIcon(category: d.category, size: 22)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(d.name).lineLimit(1).truncationMode(.middle)
-                        Text(d.source.host ?? "").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                        Text(d.isTorrent == true ? (TorrentEngine.isMagnet(d.source) ? "Magnet" : "Torrent") : d.source.host ?? "").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }.padding(.vertical, 3)
             }.width(min: 180, ideal: 250)
@@ -268,7 +270,7 @@ struct ContentView: View {
         lastPasteboardChange = pasteboard.changeCount
         let known = Set(store.items.map(\.source))
         let links = DownloadStore.links(in: pasteboard.string(forType: .string) ?? "")
-            .filter { (FileCategory.of($0.lastPathComponent) != .other || VideoEngine.isVideoPage($0)) && !known.contains($0) }
+            .filter { (FileCategory.of($0.lastPathComponent) != .other || VideoEngine.isVideoPage($0) || TorrentEngine.isMagnet($0)) && !known.contains($0) }
         guard !links.isEmpty else { return }
         store.pendingLinks = links.map(\.absoluteString).joined(separator: "\n")
         store.isAdding = true
@@ -336,7 +338,9 @@ struct DetailPanel: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.name).font(.title3.weight(.semibold)).lineLimit(1).truncationMode(.middle)
                 Text(item.source.absoluteString).font(.callout).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle).textSelection(.enabled)
-                if let segments = item.segments, segments.count > 1, item.state != "Tamamlandı" {
+                if let map = item.pieceMap, item.state != "Tamamlandı" {
+                    PieceBar(map: map, tint: StatusCell.color(item.state) == .secondary ? Color.accentColor : StatusCell.color(item.state))
+                } else if let segments = item.segments, segments.count > 1, item.state != "Tamamlandı" {
                     SegmentBar(segments: segments, tint: StatusCell.color(item.state) == .secondary ? Color.accentColor : StatusCell.color(item.state))
                 } else {
                     ProgressView(value: item.state == "Tamamlandı" ? 1 : item.progress)
@@ -349,6 +353,9 @@ struct DetailPanel: View {
                     if let eta = store.eta(for: item) { stat(t("Kalan", "Left"), Format.eta(eta)) }
                     if let segments = item.segments, segments.count > 1, item.state != "Tamamlandı" {
                         stat(t("Bağlantı", "Connections"), "\(segments.filter { !$0.isDone }.count) / \(segments.count)")
+                    }
+                    if item.isTorrent == true, item.state == "İndiriliyor" {
+                        stat(t("Kaynak / Eş", "Seeds / Peers"), "\(item.seeders ?? 0) / \(item.peers ?? 0)")
                     }
                     stat(t("Klasör", "Folder"), (item.destinationFolder ?? store.destinationFolder).lastPathComponent)
                 }
@@ -403,9 +410,45 @@ struct SegmentBar: View {
     }
 }
 
+/// Torrent parça haritası: her çizgi dosyanın bir bölümü; dolu = indi, yarı saydam = kısmen indi.
+struct PieceBar: View {
+    let map: [Double]
+    let tint: Color
+    var body: some View {
+        HStack(spacing: 1) {
+            ForEach(Array(map.enumerated()), id: \.offset) { _, v in
+                Rectangle().fill(v >= 1 ? tint : (v > 0 ? tint.opacity(0.25 + 0.5 * v) : Color.secondary.opacity(0.2)))
+            }
+        }
+        .frame(height: 8)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .help(t("Parça haritası: torrent parçaları birçok eşten aynı anda iner", "Piece map: torrent pieces arrive from many peers at once"))
+    }
+}
+
 // MARK: - Uygulama
 
+/// Tarayıcıda tıklanan magnet bağlantıları ve Finder'dan açılan .torrent dosyaları buraya gelir.
+/// Web sayfaları kendi başına indirme başlatamasın diye magnet bağlantıları önce ekleme penceresinde gösterilir.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    static weak var store: DownloadStore?
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let store = Self.store else { return }
+        var links: [URL] = []
+        for url in urls {
+            if url.isFileURL, url.pathExtension.lowercased() == "torrent" { store.addTorrentFile(url) }
+            else if TorrentEngine.isMagnet(url) || ["http", "https"].contains(url.scheme?.lowercased() ?? "") { links.append(url) }
+        }
+        if !links.isEmpty {
+            store.pendingLinks = links.map(\.absoluteString).joined(separator: "\n")
+            store.isAdding = true
+        }
+        NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
 @main struct AkintiApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store: DownloadStore
 
     /// Geliştirici seçenekleri (Terminal'den):
@@ -418,6 +461,7 @@ struct SegmentBar: View {
         let stateDir = args.firstIndex(of: "--state-dir").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1], isDirectory: true) : nil }
         let store = DownloadStore(directory: stateDir)
         for (i, arg) in args.enumerated() where arg == "--add" && i + 1 < args.count { _ = store.add(args[i + 1]) }
+        AppDelegate.store = store
         _store = StateObject(wrappedValue: store)
     }
     var body: some Scene {
@@ -432,6 +476,7 @@ struct SegmentBar: View {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button(t("Bağlantı ekle…", "Add Link…")) { store.isAdding = true }.keyboardShortcut("n")
+                Button(t("Torrent dosyası aç…", "Open Torrent File…")) { TorrentFilePicker.choose(for: store) }.keyboardShortcut("o")
             }
             CommandMenu(t("İndirmeler", "Downloads")) {
                 Button(t("Tümünü başlat", "Start All")) { store.resumeAll() }.keyboardShortcut("r", modifiers: [.command, .shift])

@@ -15,6 +15,8 @@ struct Preferences: Codable {
     var speedLimitKB = 0
     /// İndirme başlayınca IDM tarzı ilerleme penceresi aç.
     var showProgressWindow = true
+    /// Torrent bitince paylaşmaya (seed) devam et.
+    var torrentSeeding = false
 
     init(destinationPath: String) { self.destinationPath = destinationPath }
 
@@ -30,6 +32,7 @@ struct Preferences: Codable {
         connectionsPerDownload = try c.decodeIfPresent(Int.self, forKey: .connectionsPerDownload) ?? 8
         speedLimitKB = try c.decodeIfPresent(Int.self, forKey: .speedLimitKB) ?? 0
         showProgressWindow = try c.decodeIfPresent(Bool.self, forKey: .showProgressWindow) ?? true
+        torrentSeeding = try c.decodeIfPresent(Bool.self, forKey: .torrentSeeding) ?? false
     }
 
     static var standard: Preferences {

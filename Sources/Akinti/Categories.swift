@@ -2,6 +2,7 @@ import SwiftUI
 
 /// IDM benzeri dosya kategorileri; dosya uzantısından otomatik belirlenir.
 enum FileCategory: String, CaseIterable, Identifiable, Hashable {
+    case torrents = "Torrentler"
     case compressed = "Arşivler"
     case documents = "Belgeler"
     case music = "Müzik"
@@ -14,6 +15,7 @@ enum FileCategory: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
+        case .torrents: return t("Torrentler", "Torrents")
         case .compressed: return t("Arşivler", "Archives")
         case .documents: return t("Belgeler", "Documents")
         case .music: return t("Müzik", "Music")
@@ -26,6 +28,7 @@ enum FileCategory: String, CaseIterable, Identifiable, Hashable {
 
     var symbol: String {
         switch self {
+        case .torrents: return "point.3.connected.trianglepath.dotted"
         case .compressed: return "doc.zipper"
         case .documents: return "doc.richtext"
         case .music: return "music.note"
@@ -38,6 +41,7 @@ enum FileCategory: String, CaseIterable, Identifiable, Hashable {
 
     var tint: Color {
         switch self {
+        case .torrents: return .indigo
         case .compressed: return .orange
         case .documents: return .blue
         case .music: return .pink

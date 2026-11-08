@@ -43,6 +43,12 @@ Paket yerel ad hoc imzalıdır; dağıtım için Developer ID imzası ve notariz
 
 Sunucu bayt aralıklarını (HTTP Range) destekliyorsa dosya parçalara bölünür ve her parça ayrı bir bağlantıyla aynı anda indirilir (varsayılan 8, ayarlardan 1–16). Ayrıntı panelindeki parçalı çubuk her bağlantının ilerlemesini gösterir. Duraklatınca veya uygulama kapanınca her parçanın kaldığı yer kaydedilir; devam edince yalnızca eksik kısımlar iner. Sunucu aralıkları desteklemiyorsa tek bağlantıya geçilir. Yarım dosyalar `~/Library/Application Support/Akinti/partial` içinde tutulur.
 
+## Torrent ve magnet
+
+Magnet bağlantıları ve `.torrent` dosyaları [aria2](https://aria2.github.io) ile indirilir (`brew install aria2`). Magnet bağlantısını yapıştırın, `.torrent` dosyasını pencereye sürükleyin, **Dosya → Torrent dosyası aç… (⌘O)** kullanın ya da tarayıcıda magnet bağlantısına tıklayın (önce ekleme penceresi açılır, kendiliğinden indirme başlamaz). Torrentler kendi kategorisinde görünür; ayrıntı panelinde parça haritası ve kaynak/eş sayısı gösterilir. Duraklat/devam ve uygulama yeniden açıldığında kaldığı yerden sürme desteklenir. Bitince paylaşmaya devam etmek isteğe bağlıdır (Ayarlar → Torrent; varsayılan kapalı). aria2, Akıntı kapanınca kendiliğinden kapanır.
+
+Yalnızca paylaşım hakkınız olan içerikleri indirin (ör. Linux kalıpları, açık lisanslı dosyalar).
+
 ## Hız sınırı
 
 Alt çubuktaki hız göstergesinden veya Ayarlar’dan toplam hız sınırı seçilir (Sınırsız, 256 KB/sn … 25 MB/sn). Sınır tüm HTTP indirmelerine anında uygulanır; video indirmelerinde yeni başlayanlara yt-dlp’nin `--limit-rate` seçeneğiyle uygulanır.

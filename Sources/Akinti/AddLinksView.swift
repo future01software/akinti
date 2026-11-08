@@ -16,7 +16,8 @@ struct AddLinksView: View {
     @State private var wholePlaylist = true
 
     private var links: [URL] { DownloadStore.links(in: text) }
-    private var videoLinks: [URL] { links.filter { mode.treatsAsVideo($0) } }
+    private var torrentLinks: [URL] { links.filter { TorrentEngine.isMagnet($0) || (mode != .file && TorrentEngine.isTorrentLink($0)) } }
+    private var videoLinks: [URL] { links.filter { !torrentLinks.contains($0) && mode.treatsAsVideo($0) } }
     /// Hem tek video hem liste içeren bağlantılar (watch?v=…&list=…): kullanıcı seçer.
     private var mixedPlaylists: [VideoInfo] { videoLinks.compactMap { url in infos[url].flatMap { $0.isPlaylist && VideoEngine.hasSingleVideo(url) ? $0 : nil } } }
     /// Liste bilgisi gelmeden eklenirse tüm liste tek indirme olurdu; bu yüzden beklenir.
@@ -44,8 +45,8 @@ struct AddLinksView: View {
                     .frame(width: 40, height: 40).background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(t("Yeni indirme", "New Download")).font(.title2.bold())
-                    Text(t("Dosya veya video sayfası bağlantılarını yapıştırın (YouTube, Vimeo…); her satıra bir bağlantı.",
-                           "Paste file or video page links (YouTube, Vimeo…), one per line.")).font(.callout).foregroundStyle(.secondary)
+                    Text(t("Dosya, video sayfası (YouTube, Vimeo…) veya magnet bağlantılarını yapıştırın; her satıra bir bağlantı.",
+                           "Paste file, video page (YouTube, Vimeo…) or magnet links, one per line.")).font(.callout).foregroundStyle(.secondary)
                 }
             }
 
@@ -60,6 +61,10 @@ struct AddLinksView: View {
             if !links.isEmpty { preview }
 
             if !videoLinks.isEmpty && !hasEngine { installBox }
+            if torrentLinks.count > 0 && TorrentEngine.executable == nil {
+                Label(t("Torrent için aria2 gerekli. Terminal’de: ", "Torrents need aria2. In Terminal: ") + TorrentEngine.installCommand, systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout).foregroundStyle(.orange).textSelection(.enabled)
+            }
 
             Form {
                 Picker(t("Bağlantı türü", "Link type"), selection: $mode) {
@@ -102,6 +107,7 @@ struct AddLinksView: View {
 
             HStack {
                 Button(t("Panodan yapıştır", "Paste from Clipboard")) { text = NSPasteboard.general.string(forType: .string) ?? text }
+                Button(t("Torrent dosyası…", "Torrent File…")) { if TorrentFilePicker.choose(for: store) { close() } }
                 Spacer()
                 Button(t("Vazgeç", "Cancel")) { close() }.keyboardShortcut(.cancelAction)
                 if waitingForPlaylist {
@@ -134,7 +140,7 @@ struct AddLinksView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(t("\(links.count) bağlantı bulundu", "\(links.count) link(s) found")).font(.callout.weight(.semibold)).foregroundStyle(.secondary)
             ForEach(Array(links.prefix(5).enumerated()), id: \.offset) { _, url in
-                if mode.treatsAsVideo(url) { videoRow(url) } else { fileRow(url) }
+                if torrentLinks.contains(url) { torrentRow(url) } else if mode.treatsAsVideo(url) { videoRow(url) } else { fileRow(url) }
             }
             if links.count > 5 { Text(t("+\(links.count - 5) daha", "+\(links.count - 5) more")).font(.callout).foregroundStyle(.secondary) }
         }
@@ -147,6 +153,15 @@ struct AddLinksView: View {
             Text(name).lineLimit(1).truncationMode(.middle)
             Spacer()
             Text(url.host ?? "").font(.callout).foregroundStyle(.secondary).lineLimit(1)
+        }
+    }
+
+    private func torrentRow(_ url: URL) -> some View {
+        HStack(spacing: 8) {
+            FileIcon(category: .torrents, size: 22)
+            Text(TorrentEngine.displayName(url)).lineLimit(1).truncationMode(.middle)
+            Spacer()
+            Text(TorrentEngine.isMagnet(url) ? "Magnet" : "Torrent").font(.callout).foregroundStyle(.secondary)
         }
     }
 
@@ -246,6 +261,20 @@ struct AddLinksView: View {
     private func close() {
         store.pendingLinks = ""
         dismiss()
+    }
+}
+
+enum TorrentFilePicker {
+    /// .torrent dosyası seçtirir ve ekler. Eklendiyse true döner.
+    @discardableResult
+    static func choose(for store: DownloadStore) -> Bool {
+        let panel = NSOpenPanel()
+        panel.title = t("Torrent dosyası seçin", "Choose torrent files")
+        panel.allowedContentTypes = [.init(filenameExtension: "torrent") ?? .data]
+        panel.allowsMultipleSelection = true
+        panel.prompt = t("Ekle", "Add")
+        guard panel.runModal() == .OK else { return false }
+        return panel.urls.map { store.addTorrentFile($0) }.contains(true)
     }
 }
 

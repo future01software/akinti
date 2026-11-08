@@ -3,13 +3,17 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: macos-15
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Install aria2 (torrent tests)
+        run: brew install aria2
       - name: Integration tests
-        run: swift test
+        # --parallel: her test ayrı süreçte çalışır; biri takılırsa hangisi olduğu günlükte görünür.
+        run: swift test --parallel
       - name: Build app bundle
         run: ./scripts/bundle.sh
       - uses: actions/upload-artifact@v4
         with:
           name: Akinti-macOS
-          path: dist/
+          path: dist/Akinti-macOS.zip

@@ -21,8 +21,17 @@ struct Download: Identifiable, Codable {
     var videoQuality: String?
     /// Çok bağlantılı indirmede her bağlantının bayt aralığı ve ilerlemesi (devam için saklanır).
     var segments: [Segment]?
+    /// Torrent / magnet indirmesi mi (aria2 ile)?
+    var isTorrent: Bool?
+    /// Yerel .torrent dosyasının içeriği (bağlantı yerine dosyadan eklendiyse).
+    var torrentFile: Data?
+    var seeders: Int?
+    var peers: Int?
+    /// Torrent parça haritası: dosya eşit bölmelere ayrılır, her bölmenin inmiş parça oranı (0…1).
+    var pieceMap: [Double]?
 
     var category: FileCategory {
+        if isTorrent == true { return .torrents }
         let byName = FileCategory.of(name)
         guard isVideo == true, byName == .other else { return byName }
         return VideoQuality(rawValue: videoQuality ?? "")?.isAudio == true ? .music : .video
@@ -52,13 +61,21 @@ final class DownloadStore: ObservableObject {
             limiter.bytesPerSecond = Double(preferences.speedLimitKB) * 1024
             savePreferences()
             if preferences.simultaneousDownloads > oldValue.simultaneousDownloads { pump() }
+            if torrentEngine.isRunning, preferences.speedLimitKB != oldValue.speedLimitKB || preferences.torrentSeeding != oldValue.torrentSeeding {
+                Task { @MainActor in try? await self.torrentEngine.start(seeding: self.preferences.torrentSeeding, speedLimit: Int64(self.preferences.speedLimitKB) * 1024) }
+            }
         }
     }
 
     let limiter = RateLimiter()
     private var httpJobs: [UUID: HTTPJob] = [:]
     private var videoJobs: [UUID: VideoJob] = [:]
-    private var running: Int { httpJobs.count + videoJobs.count }
+    /// Torrent indirmeleri: indirme kimliği -> aria2 GID.
+    private var torrentJobs: [UUID: String] = [:]
+    private var torrentStarting: Set<UUID> = []
+    private var pollingTorrents = false
+    lazy var torrentEngine = TorrentEngine()
+    private var running: Int { httpJobs.count + videoJobs.count + torrentJobs.count + torrentStarting.count }
     private var lastSample: [UUID: Int64] = [:]
     private var ticker: AnyCancellable?
     private var terminationObserver: NSObjectProtocol?
@@ -135,6 +152,7 @@ final class DownloadStore: ObservableObject {
             }
         }
         if changed { pump() }
+        pollTorrents()
         sampleSpeeds()
         // Aktif indirmelerin parça ilerlemesi 5 sn'de bir kaydedilir; uygulama aniden kapanırsa en fazla birkaç saniyelik veri yeniden iner.
         tickCount += 1
@@ -158,16 +176,19 @@ final class DownloadStore: ObservableObject {
     static func links(in text: String) -> [URL] {
         text.components(separatedBy: .whitespacesAndNewlines)
             .compactMap { URL(string: $0.trimmingCharacters(in: CharacterSet(charactersIn: "<>\"'()[],;"))) }
-            .filter { ["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil }
+            .filter { (["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil) || TorrentEngine.isMagnet($0) }
     }
     func add(_ text: String, scheduledAt: Date? = nil, startPaused: Bool = false,
              mode: LinkMode = .auto, quality: VideoQuality = .best, titles: [URL: String] = [:]) -> Bool {
         let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-        let urls = lines.compactMap { URL(string: $0) }.filter { ["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil }
-        guard !lines.isEmpty, urls.count == lines.count else { message = t("Her satıra geçerli bir HTTP veya HTTPS bağlantısı yazın.", "Enter one valid HTTP or HTTPS link per line."); return false }
+        let urls = lines.compactMap { URL(string: $0) }.filter { (["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil) || TorrentEngine.isMagnet($0) }
+        guard !lines.isEmpty, urls.count == lines.count else { message = t("Her satıra geçerli bir HTTP, HTTPS veya magnet bağlantısı yazın.", "Enter one valid HTTP, HTTPS or magnet link per line."); return false }
         for url in urls {
             var item = Download(source: url, name: url.lastPathComponent.isEmpty ? t("İndirme", "Download") : url.lastPathComponent)
-            if mode.treatsAsVideo(url) {
+            if TorrentEngine.isMagnet(url) || (mode != .file && TorrentEngine.isTorrentLink(url)) {
+                item.isTorrent = true
+                item.name = titles[url] ?? TorrentEngine.displayName(url)
+            } else if mode.treatsAsVideo(url) {
                 item.isVideo = true
                 item.videoQuality = quality.rawValue
                 item.name = titles[url] ?? "\(url.host ?? "Video") – \(quality.title)"
@@ -181,10 +202,28 @@ final class DownloadStore: ObservableObject {
         }
         persist(); pump(); return true
     }
+    /// Yerel bir .torrent dosyasını ekler (sürükle-bırak, Dosya > Torrent aç, Finder'dan açma).
+    @discardableResult
+    func addTorrentFile(_ file: URL, startPaused: Bool = false) -> Bool {
+        guard let data = try? Data(contentsOf: file), data.first == UInt8(ascii: "d") else {
+            message = t("Geçerli bir .torrent dosyası seçin.", "Choose a valid .torrent file."); return false
+        }
+        var item = Download(source: file, name: file.deletingPathExtension().lastPathComponent)
+        item.isTorrent = true
+        item.torrentFile = data
+        item.destinationFolder = destinationFolder
+        item.addedAt = Date()
+        if startPaused { item.state = "Duraklatıldı" }
+        items.append(item)
+        if preferences.showProgressWindow, !startPaused { popupRequests.append(item.id) }
+        persist(); pump(); return true
+    }
     func pump() {
         for item in items where item.state == "Bekliyor" {
             guard running < limit else { break }
-            if item.isVideo == true { startVideo(item.id) } else { startHTTP(item.id) }
+            if item.isTorrent == true { startTorrent(item.id) }
+            else if item.isVideo == true { startVideo(item.id) }
+            else { startHTTP(item.id) }
         }
         persist()
     }
@@ -194,6 +233,17 @@ final class DownloadStore: ObservableObject {
             // Bağlantılar kapanana kadar "Duraklatılıyor"; ilerleme parçalarda korunur.
             items[i].state = "Duraklatılıyor"; job.cancel(); return
         }
+        if let gid = torrentJobs.removeValue(forKey: id) {
+            // aria2'den çıkarılır; dosyalar ve .aria2 devam bilgisi kalır. Kaldırma bitene kadar "Duraklatılıyor".
+            items[i].state = "Duraklatılıyor"
+            Task { @MainActor in
+                await self.torrentEngine.remove(gid)
+                if let i = self.items.firstIndex(where: { $0.id == id }), self.items[i].state == "Duraklatılıyor" { self.items[i].state = "Duraklatıldı" }
+                self.persist(); self.pump()
+            }
+            return
+        }
+        if torrentStarting.contains(id) { items[i].state = "Duraklatıldı"; persist(); return }
         if let job = videoJobs[id] {
             // Süreç gerçekten kapanana kadar "Duraklatılıyor": aynı dosyaya ikinci yt-dlp başlatılamaz.
             items[i].state = "Duraklatılıyor"; job.cancel(); persist(); return
@@ -201,13 +251,15 @@ final class DownloadStore: ObservableObject {
         if ["Bekliyor", "Planlandı", "Yeniden denenecek"].contains(items[i].state) { items[i].state = "Duraklatıldı"; persist() }
     }
     func start(_ id: UUID) {
-        guard let i = items.firstIndex(where: { $0.id == id }), httpJobs[id] == nil, videoJobs[id] == nil, items[i].canStart else { return }
+        guard let i = items.firstIndex(where: { $0.id == id }), httpJobs[id] == nil, videoJobs[id] == nil, torrentJobs[id] == nil, !torrentStarting.contains(id), items[i].canStart else { return }
         items[i].state = "Bekliyor"; items[i].retryCount = 0; items[i].retryAt = nil; items[i].scheduledAt = nil; pump()
     }
     /// Listeden kaldırır. `trashFile` true ise indirilen dosya Çöp Sepeti'ne taşınır (geri alınabilir).
     func remove(_ id: UUID, trashFile: Bool = false) {
         if let job = httpJobs.removeValue(forKey: id) { job.onFinish = nil; job.cancel() }
         videoJobs.removeValue(forKey: id)?.cancel()
+        if let gid = torrentJobs.removeValue(forKey: id) { Task { @MainActor in await self.torrentEngine.remove(gid) } }
+        torrentStarting.remove(id)
         try? FileManager.default.removeItem(at: partURL(id))
         if trashFile, let saved = items.first(where: { $0.id == id })?.saved, FileManager.default.fileExists(atPath: saved.path) {
             do { try FileManager.default.trashItem(at: saved, resultingItemURL: nil) }
@@ -236,6 +288,10 @@ final class DownloadStore: ObservableObject {
             job.onFinish = nil; job.cancel()
         }
         httpJobs.removeAll()
+        // aria2 Akıntı ile birlikte kapanır (--stop-with-process); devam bilgisi diskte kalır.
+        for id in torrentJobs.keys { if let i = items.firstIndex(where: { $0.id == id }) { items[i].state = "Duraklatıldı" } }
+        torrentJobs.removeAll()
+        torrentEngine.stop()
         stopVideoJobs()
     }
     func stopVideoJobs() {
@@ -307,6 +363,82 @@ final class DownloadStore: ObservableObject {
             } catch { items[i].state = "Hata"; items[i].error = error.localizedDescription }
         }
         persist(); pump()
+    }
+
+    // MARK: Torrent indirmeleri (aria2)
+
+    private func startTorrent(_ id: UUID) {
+        guard let i = items.firstIndex(where: { $0.id == id }) else { return }
+        guard TorrentEngine.executable != nil else {
+            items[i].state = "Hata"; items[i].error = TorrentEngine.EngineError.missing.errorDescription; return
+        }
+        let item = items[i]
+        let folder = item.destinationFolder ?? destinationFolder
+        items[i].state = "İndiriliyor"; items[i].error = nil
+        torrentStarting.insert(id)
+        Task { @MainActor in
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try await self.torrentEngine.start(seeding: self.preferences.torrentSeeding, speedLimit: Int64(self.preferences.speedLimitKB) * 1024)
+                let gid: String
+                if let data = item.torrentFile { gid = try await self.torrentEngine.addTorrent(data, folder: folder) }
+                else { gid = try await self.torrentEngine.addURI(item.source.absoluteString, folder: folder) }
+                self.torrentStarting.remove(id)
+                // Bu arada duraklatıldı veya silindiyse aria2'den geri çıkar.
+                guard let i = self.items.firstIndex(where: { $0.id == id }), self.items[i].state == "İndiriliyor" else {
+                    await self.torrentEngine.remove(gid); self.pump(); return
+                }
+                self.torrentJobs[id] = gid
+            } catch {
+                self.torrentStarting.remove(id)
+                if let i = self.items.firstIndex(where: { $0.id == id }) { self.fail(i, message: error.localizedDescription, retryable: false) }
+                self.persist(); self.pump()
+            }
+        }
+    }
+
+    /// Saniyede bir aria2'den durum alınır: boyut, ilerleme, kaynak/eş sayısı, bitiş ve hatalar.
+    private func pollTorrents() {
+        guard !torrentJobs.isEmpty, !pollingTorrents else { return }
+        pollingTorrents = true
+        let jobs = torrentJobs
+        Task { @MainActor in
+            defer { self.pollingTorrents = false }
+            var changed = false
+            for (id, gid) in jobs {
+                guard self.torrentJobs[id] == gid, let status = try? await self.torrentEngine.status(gid),
+                      let i = self.items.firstIndex(where: { $0.id == id }) else { continue }
+                let total = Int64(status["totalLength"] as? String ?? "") ?? 0
+                let done = Int64(status["completedLength"] as? String ?? "") ?? 0
+                let state = status["status"] as? String ?? ""
+                if let next = (status["followedBy"] as? [String])?.first {
+                    // Magnet/.torrent bağlantısı: önce üst veri iner, asıl indirme yeni bir GID ile sürer.
+                    self.torrentJobs[id] = next; continue
+                }
+                if let name = TorrentEngine.name(from: status) { self.items[i].name = name }
+                self.items[i].total = total
+                self.items[i].received = done
+                self.items[i].seeders = Int(status["numSeeders"] as? String ?? "")
+                self.items[i].peers = Int(status["connections"] as? String ?? "")
+                if let bitfield = status["bitfield"] as? String, let count = Int(status["numPieces"] as? String ?? ""), count > 0 {
+                    self.items[i].pieceMap = TorrentEngine.pieceMap(bitfield: bitfield, pieces: count)
+                }
+                let folder = self.items[i].destinationFolder ?? self.destinationFolder
+                if state == "complete" || (total > 0 && done >= total && (status["seeder"] as? String) == "true") {
+                    self.items[i].saved = folder.appendingPathComponent(self.items[i].name)
+                    self.items[i].state = "Tamamlandı"; self.items[i].completedAt = Date(); self.items[i].error = nil
+                    self.items[i].pieceMap = nil
+                    self.torrentJobs[id] = nil
+                    if state == "complete" { _ = try? await self.torrentEngine.call("aria2.removeDownloadResult", [gid]) }
+                    changed = true
+                } else if state == "error" || state == "removed" {
+                    self.torrentJobs[id] = nil
+                    self.fail(i, message: status["errorMessage"] as? String ?? t("Torrent indirilemedi.", "The torrent download failed."), retryable: true)
+                    changed = true
+                }
+            }
+            if changed { self.persist(); self.pump() }
+        }
     }
 
     // MARK: Video sitesi indirmeleri (yt-dlp)

@@ -5,15 +5,15 @@ name: Release
 on:
   push:
     tags: ["v*"]
+# Testler aynı commit için "macOS build and download tests" iş akışında çalışır; burada yalnızca paketlenir.
 permissions:
   contents: write
 jobs:
   release:
     runs-on: macos-15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Tests
-        run: swift test
       - name: Build app bundle
         run: VERSION="${GITHUB_REF_NAME#v}" ./scripts/bundle.sh
       - name: Publish release

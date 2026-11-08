@@ -58,6 +58,14 @@ struct PreferencesView: View {
                 Text(t("Geçici ağ ve sunucu hatalarında bekleyerek tekrar dener. Bulunamayan dosyalar (404) yeniden denenmez.", "Retries temporary network and server errors after a pause. Missing files (404) are not retried."))
                     .font(.callout).foregroundStyle(.secondary)
             }
+            Section("Torrent") {
+                Toggle(t("İndirme bitince paylaşmaya devam et", "Keep seeding after the download finishes"), isOn: $store.preferences.torrentSeeding)
+                Text(t("Açıksa, indirdiğiniz kadarını paylaşana kadar (oran 1.0) yükleme yapılır; kapalıysa indirme bitince durur. Torrent ve magnet bağlantıları aria2 ile indirilir" + (TorrentEngine.executable == nil ? " (kurulu değil: \(TorrentEngine.installCommand))." : "."),
+                       "When on, Akıntı uploads until it has shared as much as it downloaded (ratio 1.0); when off it stops when done. Torrents and magnet links use aria2" + (TorrentEngine.executable == nil ? " (not installed: \(TorrentEngine.installCommand))." : ".")))
+                    .font(.callout).foregroundStyle(.secondary)
+                Text(t("Yalnızca paylaşım hakkı olan içerikleri (ör. Linux kalıpları, açık lisanslı dosyalar) indirin.", "Only download content you have the right to share (e.g. Linux images, openly licensed files)."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             Section(t("Bağlantı yakalama", "Link capture")) {
                 Toggle(t("Kopyalanan indirme bağlantılarını yakala", "Capture copied download links"), isOn: $store.preferences.clipboardCapture)
                 Text(t("Bir dosya bağlantısını kopyalayıp Akıntı’ya geçtiğinizde ekleme penceresi kendiliğinden açılır. Bağlantıları pencereye sürükleyip bırakabilirsiniz de.", "When you copy a file link and switch to Akıntı, the add window opens automatically. You can also drag links into the window."))
@@ -80,7 +88,7 @@ struct PreferencesView: View {
                     Text("Akıntı " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")).foregroundStyle(.secondary)
                 }.font(.callout)
             }
-        }.formStyle(.grouped).frame(width: 600, height: 800)
+        }.formStyle(.grouped).frame(width: 600, height: 820)
         .navigationTitle(t("Ayarlar", "Settings"))
         .sheet(isPresented: $showHelp) { QuickStartView() }
         .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {
