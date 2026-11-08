@@ -6,6 +6,12 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.8.1] - 2026-11-08
+
+### Düzeltildi
+- Menü çubuğu simgesine ikinci kez tıklayınca panelin açılmaması: uygulamanın en üst yapısı artık indirme listesindeki her değişiklikte yeniden kurulmuyor; yalnızca menü çubuğu ayarı ve dil değişince güncelleniyor.
+- Bu sayede indirme sırasında menüler ve menü çubuğu öğesi saniyede birkaç kez yeniden oluşturulmuyor (daha düşük işlemci kullanımı).
+
 ## [0.8.0] - 2026-11-08
 
 ### Eklendi
@@ -122,6 +128,7 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/future01software/akinti/releases/tag/v0.8.1
 [0.8.0]: https://github.com/future01software/akinti/releases/tag/v0.8.0
 [0.7.0]: https://github.com/future01software/akinti/releases/tag/v0.7.0

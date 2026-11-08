@@ -59,7 +59,7 @@ final class DownloadStore: ObservableObject {
         didSet {
             guard preferences != oldValue else { return } // aynı değer: kaydetme, yeniden başlatma yok
             L10n.preference = preferences.language
-            if preferences.menuBarOnly != oldValue.menuBarOnly || preferences.showMenuBarIcon != oldValue.showMenuBarIcon {
+            if preferences.menuBarOnly != oldValue.menuBarOnly || preferences.showMenuBarIcon != oldValue.showMenuBarIcon || preferences.language != oldValue.language {
                 NotificationCenter.default.post(name: DownloadStore.dockPolicyChanged, object: nil)
             }
             limiter.bytesPerSecond = Double(preferences.speedLimitKB) * 1024

@@ -466,9 +466,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+/// Uygulamanın en üst yapısının izlediği, seyrek değişen durum (menü çubuğu simgesi ve dil).
+/// İndirme listesi saniyede birkaç kez değiştiği için App bunu doğrudan izlemez; izleseydi
+/// menü çubuğu öğesi ve menüler sürekli yeniden kurulur, açılan panel bozulurdu.
+final class AppChrome: ObservableObject {
+    @Published var showMenuBarIcon: Bool
+    @Published var language: String
+    private weak var store: DownloadStore?
+    private var observer: NSObjectProtocol?
+    init(store: DownloadStore) {
+        self.store = store
+        showMenuBarIcon = store.preferences.showMenuBarIcon
+        language = store.preferences.language
+        observer = NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { [weak self] _ in
+            guard let self, let store = self.store else { return }
+            if self.showMenuBarIcon != store.preferences.showMenuBarIcon { self.showMenuBarIcon = store.preferences.showMenuBarIcon }
+            if self.language != store.preferences.language { self.language = store.preferences.language }
+        }
+    }
+    /// Sistem bu değeri her güncellemede geri yazar; yalnızca gerçekten değiştiyse ayara işlenir.
+    var menuBarBinding: Binding<Bool> {
+        Binding(get: { self.showMenuBarIcon },
+                set: { v in
+                    guard v != self.showMenuBarIcon else { return }
+                    self.showMenuBarIcon = v
+                    self.store?.preferences.showMenuBarIcon = v
+                })
+    }
+}
+
 @main struct AkintiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store: DownloadStore
+    /// Bilerek @StateObject değil: App gövdesi indirme değişikliklerinde yeniden çalışmasın.
+    private let store: DownloadStore
+    @StateObject private var chrome: AppChrome
 
     /// Geliştirici seçenekleri (Terminal'den):
     ///   --state-dir <klasör>  geçmiş/ayarlar için ayrı bir klasör kullanır (gerçek verilere dokunmadan deneme)
@@ -481,7 +512,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let store = DownloadStore(directory: stateDir)
         for (i, arg) in args.enumerated() where arg == "--add" && i + 1 < args.count { _ = store.add(args[i + 1]) }
         AppDelegate.store = store
-        _store = StateObject(wrappedValue: store)
+        self.store = store
+        _chrome = StateObject(wrappedValue: AppChrome(store: store))
     }
     // Not: Gövde bilerek sade tutulur. Her pencerenin içeriği ve menü komutları ayrı türlerdedir;
     // aksi halde SwiftUI'nin iç içe tür bilgisi çok derinleşip açılışta yığın taşmasına yol açabiliyor.
@@ -489,11 +521,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WindowGroup(id: "main") { Themed(store: store) { ContentView(store: store) } }
             .defaultSize(width: 1120, height: 700)
             .windowToolbarStyle(.unified(showsTitle: true))
-            .commands { AkintiCommands(store: store) }
+            .commands { AkintiCommands(store: store, language: chrome.language) }
         // Menü çubuğu (üst bar) simgesi ve paneli.
-        // Sistem bu değeri her güncellemede geri yazar; yalnızca gerçekten değiştiyse kaydedilir (aksi halde sonsuz döngü).
-        MenuBarExtra(isInserted: Binding(get: { store.preferences.showMenuBarIcon },
-                                         set: { if $0 != store.preferences.showMenuBarIcon { store.preferences.showMenuBarIcon = $0 } })) {
+        MenuBarExtra(isInserted: chrome.menuBarBinding) {
             Themed(store: store, appliesColorScheme: false) { MenuBarPanel(store: store) }
         } label: {
             MenuBarLabel(store: store)
@@ -522,7 +552,9 @@ struct Themed<Content: View>: View {
 
 /// Menü çubuğundaki Dosya, İndirmeler ve Yardım komutları.
 struct AkintiCommands: Commands {
-    @ObservedObject var store: DownloadStore
+    let store: DownloadStore
+    /// Dil değişince menü başlıkları yenilensin diye (store izlenmez).
+    let language: String
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
             Button(t("Bağlantı ekle…", "Add Link…")) { store.isAdding = true }.keyboardShortcut("n")
