@@ -74,7 +74,7 @@ Akıntı **collects no data**, needs no account, and has no ads or tracking. It 
 
 ```sh
 swift run Akinti            # run
-./scripts/bundle.sh         # build dist/Akıntı.app and dist/Akinti-macOS.zip
+./scripts/bundle.sh         # build dist/Akinti-macOS.zip (unzip it somewhere to try the app)
 swift test                  # tests (no internet needed)
 cd Extension && npm test    # extension tests
 ```

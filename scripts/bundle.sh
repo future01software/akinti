@@ -82,6 +82,7 @@ with zipfile.ZipFile(sys.argv[2], 'w', zipfile.ZIP_DEFLATED) as archive:
         if path.is_file() and path.name != '.DS_Store':
             archive.write(path, path.relative_to(root))
 PYZIP
-# Keep a convenient local app alongside the verified distribution archive.
-/usr/bin/ditto --norsrc --noextattr "$APP" "dist/Akıntı.app"
+# Not: Açılmış bir Akıntı.app dist/ içinde bırakılmaz; bırakılırsa Spotlight ve Launchpad'de ikinci bir "Akıntı"
+# görünür ve macOS bağlantıları yanlış kopyaya gönderebilir. Denemek için zip'i geçici bir klasöre açın.
+rm -rf "dist/Akıntı.app"
 echo "Hazır: dist/Akinti-macOS.zip (sürüm $VERSION, imzası doğrulanmış paket) ve dist/Akinti-Chrome-Extension.zip"

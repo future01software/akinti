@@ -56,7 +56,7 @@ Uygulama paketi oluşturmak için:
 
 ```sh
 ./scripts/bundle.sh
-open dist/Akıntı.app
+ditto -x -k dist/Akinti-macOS.zip /tmp/akinti-deneme-app && open /tmp/akinti-deneme-app/Akıntı.app
 ```
 
 Paket yerel ad hoc imzalıdır; dağıtım için Developer ID imzası ve notarizasyon henüz yapılmamıştır.
@@ -182,7 +182,7 @@ GitHub Actions testleri çalıştırır, uygulamayı paketler ve sürümü **ayn
 Gerçek geçmişe ve ayarlara dokunmadan denemek için uygulama Terminal’den şu seçeneklerle açılabilir:
 
 ```sh
-open -n dist/Akıntı.app --args --state-dir /tmp/akinti-deneme --add https://example.org/dosya.zip --select-first --open-settings
+open -n /tmp/akinti-deneme-app/Akıntı.app --args --state-dir /tmp/akinti-deneme --add https://example.org/dosya.zip --select-first --open-settings
 ```
 
 ## Yasal uyarı
