@@ -76,6 +76,10 @@ final class HTTPJob: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     private var ended = false
     private var lastReport = Date.distantPast
 
+    /// Tarayıcı eklentisinden gelen bilgiler: bazı sunucular dosyayı yalnızca doğru Referer/User-Agent ile verir.
+    var referrer: String?
+    var userAgent: String?
+
     init(url: URL, partURL: URL, segments: [Segment]?, total: Int64, connections: Int, limiter: RateLimiter) {
         self.url = url
         self.partURL = partURL
@@ -120,6 +124,8 @@ final class HTTPJob: NSObject, URLSessionDataDelegate, @unchecked Sendable {
 
     private func launch(segmentIndex: Int?, range: String? = nil) {
         var request = URLRequest(url: url)
+        if let referrer { request.setValue(referrer, forHTTPHeaderField: "Referer") }
+        if let userAgent { request.setValue(userAgent, forHTTPHeaderField: "User-Agent") }
         if let i = segmentIndex {
             request.setValue("bytes=\(segments[i].next)-\(segments[i].end)", forHTTPHeaderField: "Range")
         } else if let range {

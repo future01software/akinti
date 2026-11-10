@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="popup">
+  <header>
+    <img src="icons/icon-48.png" alt="" width="32" height="32">
+    <div>
+      <h1 data-i18n="extName">Akıntı</h1>
+      <p id="status" class="status"><span class="dot"></span><span id="statusText">…</span></p>
+    </div>
+  </header>
+
+  <section id="missing" class="card warning" hidden>
+    <p data-i18n="popupMissing"></p>
+    <a href="https://github.com/future01software/akinti/releases/latest" target="_blank" class="button" data-i18n="popupDownloadApp"></a>
+  </section>
+
+  <button id="send" class="button primary" disabled>
+    <span id="sendLabel" data-i18n="popupSendPage"></span>
+  </button>
+  <p id="pageHost" class="muted"></p>
+
+  <label class="row">
+    <span>
+      <strong data-i18n="popupCapture"></strong>
+      <small data-i18n="popupCaptureHint"></small>
+    </span>
+    <input type="checkbox" id="capture" class="switch">
+  </label>
+
+  <footer>
+    <a href="#" id="options" data-i18n="popupOptions"></a>
+    <span id="version" class="muted"></span>
+  </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import SwiftUI
+import AkintiShared
 import AppKit
 
 struct ContentView: View {
@@ -441,6 +442,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async { Self.updateDockIcon() }
         }
         NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { _ in Self.updateDockIcon() }
+        // Tarayıcı eklentisi köprüsünü kurulu Chrome/Brave/Edge/Arc… tarayıcılarına kaydet (uygulama taşınırsa yolu günceller).
+        BrowserBridge.register()
         // YouTube sık değiştiği için Akıntı'nın kurduğu yt-dlp günde bir kez denetlenip güncellenir.
         if Self.store?.preferences.autoUpdateTools == true {
             Task { @MainActor in await ToolManager.shared.updateYtDlpIfNeeded() }
@@ -476,12 +479,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let store = Self.store else { return }
         var links: [URL] = []
         for url in urls {
-            if url.isFileURL, url.pathExtension.lowercased() == "torrent" { store.addTorrentFile(url) }
+            if let link = AkintiLink.parse(url) {
+                // Tarayıcı eklentisi: bağlantılar ve ek bilgiler ekleme penceresine gelir (kendiliğinden indirilmez).
+                links += link.urls
+                store.pendingReferrer = link.referrer
+                store.pendingUserAgent = link.userAgent
+                store.pendingVideoMode = link.mode == "video"
+            } else if url.isFileURL, url.pathExtension.lowercased() == "torrent" { store.addTorrentFile(url) }
             else if TorrentEngine.isMagnet(url) || ["http", "https"].contains(url.scheme?.lowercased() ?? "") { links.append(url) }
         }
         if !links.isEmpty {
             store.pendingLinks = links.map(\.absoluteString).joined(separator: "\n")
             store.isAdding = true
+            if MainWindow.existing == nil { store.mainWindowRequest += 1 }
         }
         NSApp.activate(ignoringOtherApps: true)
     }

@@ -6,6 +6,20 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.10.0] - 2026-11-10
+
+### Eklendi
+- **Chrome eklentisi** (Brave, Edge, Arc, Chromium, Vivaldi'de de çalışır; Manifest V3, Türkçe/İngilizce):
+  - Sağ tık → “Akıntı ile indir” (bağlantı, video/ses, seçili bağlantılar, sayfa).
+  - Araç çubuğu paneli: bağlantı durumu, “Bu videoyu/sayfayı Akıntı'ya gönder”, indirme yakalamayı aç/kapat.
+  - **IDM gibi indirme yakalama**: seçilen türlerdeki Chrome indirmeleri Akıntı'ya aktarılır; Akıntı'ya ulaşılamazsa indirme Chrome'da sürer.
+  - Ayarlar sayfası: dosya türleri, en küçük boyut, hariç tutulan siteler, bildirimler.
+- **Native Messaging köprüsü** (`akinti-bridge`): eklenti Akıntı ile açılır pencere çıkmadan konuşur; Akıntı açılınca kurulu Chromium tarayıcılarına kendini kaydeder. Köprü yalnızca Akıntı eklentisinin sabit kimliğine yanıt verir ve yalnızca http/https/magnet bağlantılarını iletir.
+- `akinti://add` bağlantıları: gelen bağlantılar her zaman önce ekleme penceresinde gösterilir. Ana pencere kapalıysa (menü çubuğu kipi dahil) açılır.
+- HTTP indirmelerinde tarayıcıdan gelen **Referer ve User-Agent** gönderilir.
+- Ayarlar → **Tarayıcı eklentisi** bölümü; sürümlerde ayrı `Akinti-Chrome-Extension.zip`.
+- Testler: köprü programı, bağlantı biçimi ve güvenliği, tarayıcı kaydı, eklenti kimliği; eklenti için Node testleri (CI'da çalışır).
+
 ## [0.9.0] - 2026-11-10
 
 ### Eklendi
@@ -149,7 +163,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.9.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/future01software/akinti/releases/tag/v0.10.0
 [0.9.0]: https://github.com/future01software/akinti/releases/tag/v0.9.0
 [0.8.2]: https://github.com/future01software/akinti/releases/tag/v0.8.2
 [0.8.1]: https://github.com/future01software/akinti/releases/tag/v0.8.1

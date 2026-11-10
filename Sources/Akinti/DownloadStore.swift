@@ -21,6 +21,9 @@ struct Download: Identifiable, Codable {
     var videoQuality: String?
     /// Çok bağlantılı indirmede her bağlantının bayt aralığı ve ilerlemesi (devam için saklanır).
     var segments: [Segment]?
+    /// Tarayıcı eklentisinden gelen Referer ve User-Agent (HTTP indirmelerinde gönderilir).
+    var referrer: String?
+    var userAgent: String?
     /// Torrent / magnet indirmesi mi (aria2 ile)?
     var isTorrent: Bool?
     /// Yerel .torrent dosyasının içeriği (bağlantı yerine dosyadan eklendiyse).
@@ -51,6 +54,12 @@ final class DownloadStore: ObservableObject {
     @Published var isAdding = false
     @Published var isShowingHelp = false
     @Published var pendingLinks = ""
+    /// Tarayıcı eklentisinden gelen bağlantıların ek bilgileri (ekleme penceresi kullanır).
+    @Published var pendingReferrer: String?
+    @Published var pendingUserAgent: String?
+    @Published var pendingVideoMode = false
+    /// Ana pencere kapalıyken açılması istendiğinde artar (menü çubuğu görünümü pencereyi açar).
+    @Published var mainWindowRequest = 0
     /// Açılması istenen indirme pencereleri (arayüz okuyup boşaltır).
     @Published var popupRequests: [UUID] = []
     /// Bir seferde bundan fazla indirme eklenirse (ör. oynatma listesi) pencere açılmaz.
@@ -184,7 +193,8 @@ final class DownloadStore: ObservableObject {
             .filter { (["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil) || TorrentEngine.isMagnet($0) }
     }
     func add(_ text: String, scheduledAt: Date? = nil, startPaused: Bool = false,
-             mode: LinkMode = .auto, quality: VideoQuality = .best, titles: [URL: String] = [:]) -> Bool {
+             mode: LinkMode = .auto, quality: VideoQuality = .best, titles: [URL: String] = [:],
+             referrer: String? = nil, userAgent: String? = nil) -> Bool {
         let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         let urls = lines.compactMap { URL(string: $0) }.filter { (["http", "https"].contains($0.scheme?.lowercased() ?? "") && $0.host != nil) || TorrentEngine.isMagnet($0) }
         guard !lines.isEmpty, urls.count == lines.count else { message = t("Her satıra geçerli bir HTTP, HTTPS veya magnet bağlantısı yazın.", "Enter one valid HTTP, HTTPS or magnet link per line."); return false }
@@ -200,6 +210,8 @@ final class DownloadStore: ObservableObject {
             }
             item.destinationFolder = destinationFolder
             item.addedAt = Date()
+            item.referrer = referrer
+            item.userAgent = userAgent
             if let date = scheduledAt, date > Date() { item.scheduledAt = date; item.state = "Planlandı" }
             else if startPaused { item.state = "Duraklatıldı" }
             items.append(item)
@@ -324,6 +336,8 @@ final class DownloadStore: ObservableObject {
         guard let i = items.firstIndex(where: { $0.id == id }) else { return }
         let job = HTTPJob(url: items[i].source, partURL: partURL(id), segments: items[i].segments, total: items[i].total,
                           connections: preferences.connectionsPerDownload, limiter: limiter)
+        job.referrer = items[i].referrer
+        job.userAgent = items[i].userAgent
         job.onProgress = { [weak self, weak job] segments, total in
             guard let self, let job, self.httpJobs[id] === job, let i = self.items.firstIndex(where: { $0.id == id }) else { return }
             self.items[i].segments = segments

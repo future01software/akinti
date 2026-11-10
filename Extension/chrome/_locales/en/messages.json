@@ -1,0 +1,117 @@
+{
+  "extName": {
+    "message": "Akıntı – Download Manager"
+  },
+  "extDescription": {
+    "message": "Sends downloads and videos to the Akıntı download manager for Mac: multi-connection downloads, YouTube, torrents."
+  },
+  "menuLink": {
+    "message": "Download link with Akıntı"
+  },
+  "menuMedia": {
+    "message": "Download this video/audio with Akıntı"
+  },
+  "menuSelection": {
+    "message": "Download selected links with Akıntı"
+  },
+  "menuPage": {
+    "message": "Send this page to Akıntı"
+  },
+  "popupConnected": {
+    "message": "Connected to Akıntı · $ARG$",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupNotConnected": {
+    "message": "Akıntı not found"
+  },
+  "popupMissing": {
+    "message": "The Akıntı app must be installed on your Mac and opened at least once."
+  },
+  "popupDownloadApp": {
+    "message": "Download Akıntı"
+  },
+  "popupSendPage": {
+    "message": "Send this page to Akıntı"
+  },
+  "popupSendVideo": {
+    "message": "Download this video with Akıntı"
+  },
+  "popupSent": {
+    "message": "Sent ✓"
+  },
+  "popupSendFailed": {
+    "message": "Couldn't send"
+  },
+  "popupCapture": {
+    "message": "Capture downloads"
+  },
+  "popupCaptureHint": {
+    "message": "Hands file downloads started in the browser over to Akıntı."
+  },
+  "popupOptions": {
+    "message": "Settings"
+  },
+  "optionsTitle": {
+    "message": "Akıntı extension"
+  },
+  "optionsCaptureTitle": {
+    "message": "Download capture"
+  },
+  "optionsCaptureHint": {
+    "message": "Downloads of the types below go to Akıntı instead of the browser. If Akıntı can't be reached, the browser keeps the download."
+  },
+  "optionsExtensions": {
+    "message": "File types to capture"
+  },
+  "optionsExtensionsHint": {
+    "message": "Separate with spaces or commas (e.g. zip dmg mp4)."
+  },
+  "optionsMinSize": {
+    "message": "Minimum file size"
+  },
+  "optionsExcluded": {
+    "message": "Excluded sites"
+  },
+  "optionsExcludedHint": {
+    "message": "One domain per line. Add sites that need you to be signed in (e.g. email attachments); the browser keeps downloading from them."
+  },
+  "optionsNotify": {
+    "message": "Show a notification on errors"
+  },
+  "optionsHowTitle": {
+    "message": "How to use"
+  },
+  "optionsHow1": {
+    "message": "Right-click a link, video or page and choose “Download with Akıntı”."
+  },
+  "optionsHow2": {
+    "message": "On a page like YouTube, click the Akıntı icon in the toolbar and choose “Download this video”."
+  },
+  "optionsHow3": {
+    "message": "Akıntı always shows links in its add window first; nothing downloads until you confirm."
+  },
+  "optionsReset": {
+    "message": "Restore defaults"
+  },
+  "optionsSaved": {
+    "message": "Saved"
+  },
+  "notInstalledTitle": {
+    "message": "Akıntı"
+  },
+  "notInstalledBody": {
+    "message": "Akıntı wasn't found. Install the app and open it once; the browser keeps the download."
+  },
+  "sendFailedBody": {
+    "message": "Couldn't send to Akıntı: $ARG$",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  }
+}

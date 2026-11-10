@@ -80,6 +80,30 @@ struct PreferencesView: View {
                 Text(t("Yalnızca paylaşım hakkı olan içerikleri (ör. Linux kalıpları, açık lisanslı dosyalar) indirin.", "Only download content you have the right to share (e.g. Linux images, openly licensed files)."))
                     .font(.callout).foregroundStyle(.secondary)
             }
+            Section(t("Tarayıcı eklentisi", "Browser extension")) {
+                Text(t("Chrome, Brave, Edge, Arc ve diğer Chromium tarayıcılarında sağ tıkla “Akıntı ile indir”, araç çubuğundan “Bu videoyu indir” ve IDM gibi indirme yakalama.",
+                       "Right-click “Download with Akıntı”, “Download this video” from the toolbar, and IDM-style download capture in Chrome, Brave, Edge, Arc and other Chromium browsers."))
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                ForEach(BrowserBridge.installedBrowsers) { browser in
+                    LabeledContent(browser.name) {
+                        Label(BrowserBridge.isRegistered(browser) ? t("Bağlantı hazır", "Connection ready") : t("Hazır değil", "Not ready"),
+                              systemImage: BrowserBridge.isRegistered(browser) ? "checkmark.circle.fill" : "xmark.circle")
+                            .foregroundStyle(BrowserBridge.isRegistered(browser) ? Color.green : Color.secondary)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(t("Kurulum", "Setup")).font(.callout.weight(.semibold))
+                    Text(t("1. “Eklenti klasörünü göster”e basın.\n2. Tarayıcıda chrome://extensions adresini açıp sağ üstten Geliştirici modunu açın.\n3. “Paketlenmemiş öğe yükle”ye basıp açılan Akıntı klasörünü (ChromeExtension) seçin.",
+                           "1. Click “Show extension folder”.\n2. In your browser open chrome://extensions and turn on Developer mode (top right).\n3. Click “Load unpacked” and choose the Akıntı folder (ChromeExtension)."))
+                        .font(.callout).foregroundStyle(.secondary).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                }
+                HStack {
+                    Button(t("Eklenti klasörünü göster", "Show extension folder")) { BrowserBridge.revealExtension() }
+                    Button(t("chrome://extensions adresini kopyala", "Copy chrome://extensions")) {
+                        NSPasteboard.general.clearContents(); NSPasteboard.general.setString("chrome://extensions", forType: .string)
+                    }
+                }
+            }
             Section(t("Bileşenler", "Components")) {
                 ForEach(ManagedTool.allCases) { tool in ToolRow(tool: tool) }
                 LabeledContent {
@@ -140,7 +164,7 @@ struct PreferencesView: View {
                     Text("Akıntı " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")).foregroundStyle(.secondary)
                 }.font(.callout)
             }
-        }.formStyle(.grouped).frame(width: 620, height: 860)
+        }.formStyle(.grouped).frame(width: 620, height: 880)
         .navigationTitle(t("Ayarlar", "Settings"))
         .sheet(isPresented: $showHelp) { QuickStartView() }
         .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {

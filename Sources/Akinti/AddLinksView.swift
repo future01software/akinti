@@ -135,6 +135,14 @@ struct AddLinksView: View {
                 text = DownloadStore.links(in: clip).map(\.absoluteString).joined(separator: "\n")
             }
             store.pendingLinks = ""
+            if store.pendingVideoMode { mode = .video }
+        }
+        // Pencere açıkken eklentiden yeni bağlantı gelirse listeye eklenir.
+        .onChange(of: store.pendingLinks) { _, new in
+            guard !new.isEmpty else { return }
+            text = [text.trimmingCharacters(in: .whitespacesAndNewlines), new].filter { !$0.isEmpty }.joined(separator: "\n")
+            store.pendingLinks = ""
+            if store.pendingVideoMode { mode = .video }
         }
         .task(id: videoLinks) { await probeVideos() }
     }
@@ -266,11 +274,13 @@ struct AddLinksView: View {
     private func submit(paused: Bool) {
         let (urls, titles) = expanded
         let joined = urls.map(\.absoluteString).joined(separator: "\n")
-        if store.add(joined, scheduledAt: schedule ? scheduledAt : nil, startPaused: paused, mode: mode, quality: quality, titles: titles) { close() }
+        if store.add(joined, scheduledAt: schedule ? scheduledAt : nil, startPaused: paused, mode: mode, quality: quality, titles: titles,
+                     referrer: store.pendingReferrer, userAgent: store.pendingUserAgent) { close() }
     }
 
     private func close() {
         store.pendingLinks = ""
+        store.pendingReferrer = nil; store.pendingUserAgent = nil; store.pendingVideoMode = false
         dismiss()
     }
 }

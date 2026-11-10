@@ -1,0 +1,117 @@
+{
+  "extName": {
+    "message": "Akıntı – İndirme Yöneticisi"
+  },
+  "extDescription": {
+    "message": "İndirmeleri ve videoları Mac için Akıntı indirme yöneticisine gönderir: çok bağlantılı hızlı indirme, YouTube, torrent."
+  },
+  "menuLink": {
+    "message": "Bağlantıyı Akıntı ile indir"
+  },
+  "menuMedia": {
+    "message": "Bu videoyu/sesi Akıntı ile indir"
+  },
+  "menuSelection": {
+    "message": "Seçili bağlantıları Akıntı ile indir"
+  },
+  "menuPage": {
+    "message": "Bu sayfayı Akıntı'ya gönder"
+  },
+  "popupConnected": {
+    "message": "Akıntı bağlı · $ARG$",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupNotConnected": {
+    "message": "Akıntı bulunamadı"
+  },
+  "popupMissing": {
+    "message": "Eklentinin çalışması için Mac'te Akıntı uygulaması kurulu olmalı ve en az bir kez açılmış olmalı."
+  },
+  "popupDownloadApp": {
+    "message": "Akıntı'yı indir"
+  },
+  "popupSendPage": {
+    "message": "Bu sayfayı Akıntı'ya gönder"
+  },
+  "popupSendVideo": {
+    "message": "Bu videoyu Akıntı ile indir"
+  },
+  "popupSent": {
+    "message": "Gönderildi ✓"
+  },
+  "popupSendFailed": {
+    "message": "Gönderilemedi"
+  },
+  "popupCapture": {
+    "message": "İndirmeleri yakala"
+  },
+  "popupCaptureHint": {
+    "message": "Chrome'da başlayan dosya indirmelerini Akıntı'ya aktarır."
+  },
+  "popupOptions": {
+    "message": "Ayarlar"
+  },
+  "optionsTitle": {
+    "message": "Akıntı eklentisi"
+  },
+  "optionsCaptureTitle": {
+    "message": "İndirme yakalama"
+  },
+  "optionsCaptureHint": {
+    "message": "Aşağıdaki türlerdeki indirmeler Chrome yerine Akıntı'ya gider. Akıntı'ya ulaşılamazsa indirme Chrome'da sürer."
+  },
+  "optionsExtensions": {
+    "message": "Yakalanacak dosya türleri"
+  },
+  "optionsExtensionsHint": {
+    "message": "Boşluk veya virgülle ayırın (ör. zip dmg mp4)."
+  },
+  "optionsMinSize": {
+    "message": "En küçük dosya boyutu"
+  },
+  "optionsExcluded": {
+    "message": "Hariç tutulan siteler"
+  },
+  "optionsExcludedHint": {
+    "message": "Her satıra bir alan adı. Giriş gerektiren siteleri (ör. e-posta ekleri) buraya ekleyin; bu siteler Chrome'da indirmeye devam eder."
+  },
+  "optionsNotify": {
+    "message": "Hata olunca bildirim göster"
+  },
+  "optionsHowTitle": {
+    "message": "Nasıl kullanılır?"
+  },
+  "optionsHow1": {
+    "message": "Bir bağlantıya, videoya veya sayfaya sağ tıklayıp “Akıntı ile indir”i seçin."
+  },
+  "optionsHow2": {
+    "message": "YouTube gibi bir sayfadayken araç çubuğundaki Akıntı simgesinden “Bu videoyu indir”e basın."
+  },
+  "optionsHow3": {
+    "message": "Akıntı her bağlantıyı önce ekleme penceresinde gösterir; siz onaylamadan indirme başlamaz."
+  },
+  "optionsReset": {
+    "message": "Varsayılanlara dön"
+  },
+  "optionsSaved": {
+    "message": "Kaydedildi"
+  },
+  "notInstalledTitle": {
+    "message": "Akıntı"
+  },
+  "notInstalledBody": {
+    "message": "Akıntı bulunamadı. Uygulamayı kurup bir kez açın; indirme tarayıcıda sürüyor."
+  },
+  "sendFailedBody": {
+    "message": "Akıntı'ya gönderilemedi: $ARG$",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  }
+}

@@ -20,6 +20,11 @@ cp Assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # Lisanslar ve torrent bileşeni (aria2 + kütüphaneleri; bkz. Licenses/THIRD-PARTY.md)
 cp -R Licenses "$APP/Contents/Resources/Licenses"
 ./scripts/bundle-aria2.sh "$APP"
+# Tarayıcı eklentisi: Native Messaging köprüsü ve eklenti klasörü (Ayarlar → Tarayıcı eklentisi)
+mkdir -p "$APP/Contents/Helpers"
+cp "$BIN/akinti-bridge" "$APP/Contents/Helpers/akinti-bridge"
+codesign --force --sign - "$APP/Contents/Helpers/akinti-bridge" >/dev/null 2>&1
+cp -R Extension/chrome "$APP/Contents/Resources/ChromeExtension"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -35,6 +40,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleURLTypes</key><array><dict>
   <key>CFBundleURLName</key><string>org.akinti.magnet</string>
   <key>CFBundleURLSchemes</key><array><string>magnet</string></array>
+</dict><dict>
+  <key>CFBundleURLName</key><string>org.akinti.add</string>
+  <key>CFBundleURLSchemes</key><array><string>akinti</string></array>
 </dict></array>
 <key>CFBundleDocumentTypes</key><array><dict>
   <key>CFBundleTypeName</key><string>BitTorrent</string>
@@ -58,6 +66,15 @@ with zipfile.ZipFile(sys.argv[2], 'w', zipfile.ZIP_DEFLATED) as archive:
         if path.is_file():
             archive.write(path, path.relative_to(app.parent))
 PYZIP
+# Tarayıcı eklentisi ayrı zip olarak da (Chrome Web Store'a yükleme ve "Paketlenmemiş öğe yükle" için).
+python3 - Extension/chrome "dist/Akinti-Chrome-Extension.zip" <<'PYZIP'
+import pathlib, sys, zipfile
+root = pathlib.Path(sys.argv[1])
+with zipfile.ZipFile(sys.argv[2], 'w', zipfile.ZIP_DEFLATED) as archive:
+    for path in sorted(root.rglob('*')):
+        if path.is_file() and path.name != '.DS_Store':
+            archive.write(path, path.relative_to(root))
+PYZIP
 # Keep a convenient local app alongside the verified distribution archive.
 /usr/bin/ditto --norsrc --noextattr "$APP" "dist/Akıntı.app"
-echo "Hazır: dist/Akinti-macOS.zip (sürüm $VERSION, imzası doğrulanmış paket)"
+echo "Hazır: dist/Akinti-macOS.zip (sürüm $VERSION, imzası doğrulanmış paket) ve dist/Akinti-Chrome-Extension.zip"

@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Akıntı tarayıcı eklentisi (Extension/chrome) ve testleri",
+  "scripts": { "test": "node --test tests/*.test.js" }
+}

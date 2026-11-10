@@ -11,9 +11,13 @@ jobs:
       - name: Integration tests
         # --parallel: her test ayrı süreçte çalışır; biri takılırsa hangisi olduğu günlükte görünür.
         run: swift test --parallel
+      - name: Extension tests
+        run: cd Extension && npm test
       - name: Build app bundle
         run: ./scripts/bundle.sh
       - uses: actions/upload-artifact@v4
         with:
           name: Akinti-macOS
-          path: dist/Akinti-macOS.zip
+          path: |
+            dist/Akinti-macOS.zip
+            dist/Akinti-Chrome-Extension.zip

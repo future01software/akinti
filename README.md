@@ -123,6 +123,21 @@ Kaynaklarda üçüncü taraf Swift bağımlılığı yoktur; video siteleri içi
 swift scripts/make-icon.swift Assets/AppIcon-1024.png
 ```
 
+## Tarayıcı eklentisi (Chrome, Brave, Edge, Arc…)
+
+Akıntı'nın Chrome eklentisi IDM'deki gibi çalışır:
+
+- **Sağ tık → “Akıntı ile indir”**: bağlantı, video/ses, seçili metindeki bağlantılar veya sayfanın kendisi.
+- **Araç çubuğu düğmesi**: YouTube gibi bir sayfadayken “Bu videoyu Akıntı ile indir”.
+- **İndirme yakalama**: Chrome'da başlayan zip, dmg, iso, mp4… indirmeleri Akıntı'ya aktarılır (türler, en küçük boyut ve hariç tutulan siteler ayarlanabilir). Akıntı'ya ulaşılamazsa indirme Chrome'da sürer.
+- Gönderilen her bağlantı Akıntı'nın ekleme penceresinde gösterilir; onaylamadan indirme başlamaz. Yönlendiren sayfa (Referer) ve tarayıcı kimliği aktarıldığı için bu bilgileri isteyen sunucular da çalışır.
+
+Eklenti Akıntı ile **Native Messaging** üzerinden konuşur (açılır pencere çıkmaz): Akıntı açılınca uygulamanın içindeki küçük köprüyü (`akinti-bridge`) kurulu Chrome, Brave, Edge, Arc, Chromium ve Vivaldi'ye kaydeder; köprü yalnızca Akıntı eklentisinin kimliğine (`ojpoadglbpcggeknbppjmhmeajdeiklk`) yanıt verir.
+
+**Kurulum:** Akıntı → Ayarlar → **Tarayıcı eklentisi** → “Eklenti klasörünü göster”; tarayıcıda `chrome://extensions` → **Geliştirici modu** → **Paketlenmemiş öğe yükle** → açılan `ChromeExtension` klasörü. Eklenti ayrıca her sürümde `Akinti-Chrome-Extension.zip` olarak yayınlanır.
+
+<p align="center"><img src="docs/eklenti-panel.png" width="300" alt="Akıntı eklentisinin araç çubuğu paneli"> &nbsp; <img src="docs/eklenti-ayarlar.png" width="420" alt="Akıntı eklentisinin ayarlar sayfası"></p>
+
 ## Menü çubuğu
 
 Akıntı menü çubuğunda (üst bar) bir simge gösterir; indirme sürerken yanında anlık hız yazar. Simgeye tıklayınca aktif indirmeleri duraklatıp sürdürebilir, hız sınırını değiştirebilir, yeni bağlantı ekleyebilirsiniz. Ayarlar → Menü çubuğu ve başlangıç bölümünden simge gizlenebilir, **yalnızca menü çubuğunda çalışma** (pencere kapanınca Dock simgesi gizlenir) ve **Mac açılınca başlatma** açılabilir. Dock’tan “Çık” denince Akıntı kapanmaz, menü çubuğunda çalışmaya devam eder; tamamen kapatmak için menü çubuğundaki **Akıntı’dan çık** ya da **⌘Q** kullanın (Ayarlar’dan değiştirilebilir). Bartender, Barbee gibi menü çubuğu düzenleyiciler yeni simgeleri gizli bölüme koyabilir; simgeyi görünür bölüme sürükleyin.
@@ -156,4 +171,4 @@ Akıntı MIT lisanslıdır. Uygulamayla birlikte gelen aria2 (GPL v2) ve kütüp
 
 ## Testler
 
-`swift test` komutu yerel Python HTTP sunucusuyla gerçek indirmeler yapar. Kuyruk, duraklatma/yeniden başlatma, bayt bütünlüğü, dosya adı çakışması, 404, geçmiş, zamanlama ve geçici 503 sonrası otomatik yeniden denemeyi kontrol eder. Testler kullanıcının indirme klasörünü kullanmaz. GitHub Actions aynı test ve paketleme komutlarını çalıştıracak şekilde hazırlanmıştır; uzak çalıştırma henüz doğrulanmadı.
+`swift test` internet gerektirmeden gerçek indirmeler yapar: yerel HTTP sunucusuyla çok bağlantılı indirme, duraklat/devam ve hız sınırı; sahte bir yt-dlp ile video akışı; yerel tracker ve paylaşımcıyla gerçek torrent aktarımı; bileşen kurulumunda SHA-256 ve imza doğrulaması; tarayıcı köprüsü. Eklentinin karar fonksiyonları Node ile sınanır (`cd Extension && npm test`). GitHub Actions her gönderimde ikisini de çalıştırır ve uygulamayı paketler.

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "Akıntı",
+  "description": "__MSG_extDescription__",
+  "version": "1.0.0",
+  "default_locale": "en",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1S6SHzdYHyv0Qdq51L4g1p4tYf9jvnzQHPq3vNOPlD9B7/ZqgEtrn97lONIE+H6lpBvXOaBj0ZRZhJw7ej9IHSI3HLhb21huogkifGYBKVpjfaS2zla3zcc7WIBZSo4qDzsLRMzD6/gOnRmYphvYgWNGJsZPR1haJ72x+3X9PNGsWLZO3A8AUuhzMA37XurvH17XkoCI5KPK5LQD3JG9MMXkCQup4Pr5TF50OVzcR4gNwtAJOo8WtbNYKF0WYWTLcbG7Waes5q5EnNBIZeHsqdR7HyBv77ZtgP3r0ttmAmiATVSbCVIS4YgkBMpg7PoRVb1vmt3ZFeg4R5cBHJoxlwIDAQAB",
+  "icons": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
+  "action": {
+    "default_title": "__MSG_extName__",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" }
+  },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "options_page": "options.html",
+  "permissions": ["contextMenus", "downloads", "nativeMessaging", "storage", "notifications", "activeTab"],
+  "homepage_url": "https://github.com/future01software/akinti"
+}

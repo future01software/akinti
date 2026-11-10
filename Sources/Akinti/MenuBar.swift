@@ -17,8 +17,14 @@ enum MainWindow {
 /// Menü çubuğundaki simge: indirme varken yanında toplam hız yazar.
 struct MenuBarLabel: View {
     @ObservedObject var store: DownloadStore
+    @Environment(\.openWindow) private var openWindow
     private var active: Int { store.items.filter { $0.state == "İndiriliyor" }.count }
     var body: some View {
+        label
+            // Ana pencere kapalıyken (ör. yalnızca menü çubuğu kipinde) eklentiden bağlantı gelirse pencereyi açar.
+            .onChange(of: store.mainWindowRequest) { _, _ in MainWindow.show(openWindow: openWindow) }
+    }
+    @ViewBuilder private var label: some View {
         if active > 0 {
             Label(Format.speed(store.totalSpeed), systemImage: "arrow.down.circle.fill").labelStyle(.titleAndIcon).monospacedDigit()
         } else {
