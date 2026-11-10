@@ -29,6 +29,10 @@ Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yönetic
 
 Zip’i açıp `Akıntı.app`’i Programlar klasörüne taşıyın. Uygulama henüz Apple Developer ID ile imzalı olmadığından ilk açılışta macOS uyarı verir: uygulamaya **sağ tıklayıp Aç**’ı seçin (veya Sistem Ayarları → Gizlilik ve Güvenlik → **Yine de Aç**). **Homebrew gerekmez:** torrent desteği uygulamayla birlikte gelir; video siteleri için gereken bileşenler ilk kullanımda tek tıkla kurulur.
 
+### Güncelleme
+
+Akıntı yeni sürümleri kendisi bulur ve kurar: **Ayarlar → Güncellemeler** (günde bir kez otomatik denetler). Güncelleme GitHub sürümünden indirilir, SHA-256 ile doğrulanır; Akıntı kapanıp yeni sürümle açılır, indirmeler korunur.
+
 ## Çalıştırma
 
 Swift araçları (Xcode veya Command Line Tools) kuruluysa:

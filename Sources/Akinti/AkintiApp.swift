@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var sortOrder = [KeyPathComparator(\Download.addedDate)]
     @State private var confirmTrash = false
     @State private var lastPasteboardChange = NSPasteboard.general.changeCount
+    @ObservedObject private var updater = Updater.shared
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
 
@@ -54,6 +55,15 @@ struct ContentView: View {
         .frame(minWidth: 960, minHeight: 560)
         .sheet(isPresented: $store.isAdding) { AddLinksView(store: store) }
         .sheet(isPresented: $store.isShowingHelp) { QuickStartView() }
+        .alert(t("Akıntı güncellemesi hazır", "Akıntı update available"), isPresented: $updater.promptVisible, presenting: updater.available) { release in
+            Button(t("Şimdi güncelle", "Update Now")) { Task { await updater.install(release) } }
+            Button(t("Sürüm notları", "Release Notes")) { NSWorkspace.shared.open(release.pageURL) }
+            Button(t("Sonra", "Later"), role: .cancel) {}
+        } message: { release in
+            Text(t("Akıntı \(release.version) çıktı (sizdeki \(Updater.currentVersion)). Güncelleme indirilip doğrulanır; Akıntı kapanıp yeni sürümle açılır, indirmeleriniz korunur.",
+                   "Akıntı \(release.version) is out (you have \(Updater.currentVersion)). The update is downloaded and verified; Akıntı restarts with the new version and your downloads are kept."))
+        }
+        .sheet(isPresented: Binding(get: { updater.isBusyInstalling }, set: { _ in })) { UpdateProgressView(updater: updater) }
         .alert("Akıntı", isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {
             Button(t("Tamam", "OK")) { store.message = nil }
         } message: { Text(store.message ?? "") }
@@ -454,6 +464,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Tarayıcı eklentisi köprüsünü kurulu Chrome/Brave/Edge/Arc… tarayıcılarına kaydet (uygulama taşınırsa yolu günceller).
         BrowserBridge.register()
         BrowserBridge.syncInstalledExtension()
+        // Akıntı'nın yeni sürümü günde bir kez denetlenir (açılıştan biraz sonra).
+        if Self.store?.preferences.autoCheckUpdates == true {
+            Task { @MainActor in try? await Task.sleep(nanoseconds: 3_000_000_000); await Updater.shared.check(userInitiated: false) }
+        }
         // YouTube sık değiştiği için Akıntı'nın kurduğu yt-dlp günde bir kez denetlenip güncellenir.
         if Self.store?.preferences.autoUpdateTools == true {
             Task { @MainActor in await ToolManager.shared.updateYtDlpIfNeeded() }

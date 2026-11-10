@@ -91,6 +91,9 @@ struct PreferencesView: View {
                 Text(t("Yalnızca paylaşım hakkı olan içerikleri (ör. Linux kalıpları, açık lisanslı dosyalar) indirin.", "Only download content you have the right to share (e.g. Linux images, openly licensed files)."))
                     .font(.callout).foregroundStyle(.secondary)
             }
+            Section(t("Güncellemeler", "Updates")) {
+                UpdateSettingsRows(store: store)
+            }
             Section(t("Tarayıcı eklentisi", "Browser extension")) {
                 Text(t("Chrome, Brave, Edge, Arc ve diğer Chromium tarayıcılarında sağ tıkla “Akıntı ile indir”, araç çubuğundan “Bu videoyu indir” ve IDM gibi indirme yakalama.",
                        "Right-click “Download with Akıntı”, “Download this video” from the toolbar, and IDM-style download capture in Chrome, Brave, Edge, Arc and other Chromium browsers."))

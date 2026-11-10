@@ -25,6 +25,8 @@ struct Preferences: Codable, Equatable {
     var keepRunningOnDockQuit = true
     /// Akıntı'nın kurduğu yt-dlp'yi günde bir kez denetleyip güncelle.
     var autoUpdateTools = true
+    /// Akıntı'nın yeni sürümünü günde bir kez denetle.
+    var autoCheckUpdates = true
 
     init(destinationPath: String) { self.destinationPath = destinationPath }
 
@@ -45,6 +47,7 @@ struct Preferences: Codable, Equatable {
         menuBarOnly = try c.decodeIfPresent(Bool.self, forKey: .menuBarOnly) ?? false
         keepRunningOnDockQuit = try c.decodeIfPresent(Bool.self, forKey: .keepRunningOnDockQuit) ?? true
         autoUpdateTools = try c.decodeIfPresent(Bool.self, forKey: .autoUpdateTools) ?? true
+        autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
     }
 
     static var standard: Preferences {

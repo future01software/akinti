@@ -6,6 +6,15 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.11.0] - 2026-11-10
+
+### Eklendi
+- **Uygulama içi güncelleme.** Akıntı yeni sürümleri kendisi denetler ve kurar; GitHub'dan elle indirmek gerekmez.
+  - Ayarlar → **Güncellemeler**: yüklü sürüm, “Güncellemeleri denetle”, sürüm notları, “günde bir kez otomatik denetle” (varsayılan açık).
+  - Yeni sürüm bulununca “Akıntı X hazır” sorusu; menü çubuğu panelinde de gösterilir.
+  - Güncelleme GitHub sürümünden indirilir, **SHA-256 ile doğrulanır**, paketin uygulama kimliği, sürümü ve kod imzası denetlenir; Akıntı kapanıp yeni sürümle açılır, indirmeler korunur. Değiştirme yarıda kalırsa eski sürüm geri konur.
+- Sürümlerde `Akinti-macOS.zip.sha256` dosyası.
+
 ## [0.10.3] - 2026-11-10
 
 ### Düzeltildi
@@ -183,7 +192,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.3...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/future01software/akinti/releases/tag/v0.11.0
 [0.10.3]: https://github.com/future01software/akinti/releases/tag/v0.10.3
 [0.10.2]: https://github.com/future01software/akinti/releases/tag/v0.10.2
 [0.10.1]: https://github.com/future01software/akinti/releases/tag/v0.10.1

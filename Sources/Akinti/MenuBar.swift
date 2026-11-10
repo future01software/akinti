@@ -115,6 +115,7 @@ struct MenuBarPanel: View {
     @ObservedObject var store: DownloadStore
     /// Açılır pencereyi kapatır (bir işlemden sonra).
     var dismiss: () -> Void = {}
+    @ObservedObject private var updater = Updater.shared
 
     private var visible: [Download] {
         let order = ["İndiriliyor": 0, "Duraklatılıyor": 1, "Bekliyor": 2, "Yeniden denenecek": 3, "Planlandı": 4, "Duraklatıldı": 5]
@@ -149,6 +150,14 @@ struct MenuBarPanel: View {
                 if visible.count > 6 {
                     Text(t("+\(visible.count - 6) daha", "+\(visible.count - 6) more")).font(.callout).foregroundStyle(.secondary)
                 }
+            }
+
+            if let release = updater.available {
+                Button { dismiss(); MainWindow.show(); Updater.shared.promptVisible = true } label: {
+                    Label(t("Akıntı \(release.version) hazır — güncelle", "Akıntı \(release.version) is available — update"), systemImage: "arrow.down.app")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.borderless).foregroundStyle(Color.accentColor)
             }
 
             Divider()
