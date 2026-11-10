@@ -65,6 +65,8 @@ struct ContentView: View {
         .onChange(of: store.popupRequests) { _, _ in openRequestedPopups() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in captureClipboard() }
         .onAppear {
+            MainWindow.openAction = openWindow
+            MainWindow.settingsAction = openSettings
             NSApp.setActivationPolicy(.regular) // ana pencere görünürken Dock simgesi her zaman vardır
             openRequestedPopups() // pencere açılmadan önce eklenen indirmeler için
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
@@ -432,8 +434,10 @@ struct PieceBar: View {
 
 /// Tarayıcıda tıklanan magnet bağlantıları ve Finder'dan açılan .torrent dosyaları buraya gelir.
 /// Web sayfaları kendi başına indirme başlatamasın diye magnet bağlantıları önce ekleme penceresinde gösterilir.
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var store: DownloadStore?
+    static var statusItem: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Dock'un "Çık" komutunu kapanma süreci başlamadan karşıla (AppKit'in kendi işleyicisinin yerine).
@@ -445,6 +449,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async { Self.updateDockIcon() }
         }
         NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { _ in Self.updateDockIcon() }
+        // Menü çubuğu simgesi ve paneli
+        if let store = Self.store { Self.statusItem = StatusItemController(store: store) }
         // Tarayıcı eklentisi köprüsünü kurulu Chrome/Brave/Edge/Arc… tarayıcılarına kaydet (uygulama taşınırsa yolu günceller).
         BrowserBridge.register()
         // YouTube sık değiştiği için Akıntı'nın kurduğu yt-dlp günde bir kez denetlenip güncellenir.
@@ -482,7 +488,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Dock (veya başka bir uygulama) "çık" Apple olayı gönderdiyse true. ⌘Q ve menüden çıkışta olay yoktur;
     /// oturum kapatma, yeniden başlatma ve kapatmada olayın içinde bir "çıkış nedeni" bulunur.
-    static func isQuitAppleEventWithoutReason(_ event: NSAppleEventDescriptor?) -> Bool {
+    nonisolated static func isQuitAppleEventWithoutReason(_ event: NSAppleEventDescriptor?) -> Bool {
         guard let event, event.eventClass == AEEventClass(kCoreEventClass), event.eventID == AEEventID(kAEQuitApplication) else { return false }
         return event.attributeDescriptor(forKeyword: AEKeyword(kAEQuitReason)) == nil
     }
@@ -515,28 +521,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// İndirme listesi saniyede birkaç kez değiştiği için App bunu doğrudan izlemez; izleseydi
 /// menü çubuğu öğesi ve menüler sürekli yeniden kurulur, açılan panel bozulurdu.
 final class AppChrome: ObservableObject {
-    @Published var showMenuBarIcon: Bool
     @Published var language: String
     private weak var store: DownloadStore?
     private var observer: NSObjectProtocol?
     init(store: DownloadStore) {
         self.store = store
-        showMenuBarIcon = store.preferences.showMenuBarIcon
         language = store.preferences.language
         observer = NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { [weak self] _ in
             guard let self, let store = self.store else { return }
-            if self.showMenuBarIcon != store.preferences.showMenuBarIcon { self.showMenuBarIcon = store.preferences.showMenuBarIcon }
             if self.language != store.preferences.language { self.language = store.preferences.language }
         }
-    }
-    /// Sistem bu değeri her güncellemede geri yazar; yalnızca gerçekten değiştiyse ayara işlenir.
-    var menuBarBinding: Binding<Bool> {
-        Binding(get: { self.showMenuBarIcon },
-                set: { v in
-                    guard v != self.showMenuBarIcon else { return }
-                    self.showMenuBarIcon = v
-                    self.store?.preferences.showMenuBarIcon = v
-                })
     }
 }
 
@@ -567,13 +561,6 @@ final class AppChrome: ObservableObject {
             .defaultSize(width: 1120, height: 700)
             .windowToolbarStyle(.unified(showsTitle: true))
             .commands { AkintiCommands(store: store, language: chrome.language) }
-        // Menü çubuğu (üst bar) simgesi ve paneli.
-        MenuBarExtra(isInserted: chrome.menuBarBinding) {
-            Themed(store: store, appliesColorScheme: false) { MenuBarPanel(store: store) }
-        } label: {
-            MenuBarLabel(store: store)
-        }
-        .menuBarExtraStyle(.window)
         // IDM tarzı indirme penceresi (her indirme için bir tane).
         WindowGroup(id: "download", for: UUID.self) { $id in Themed(store: store) { DownloadPopup(store: store, id: id) } }
             .windowResizability(.contentSize)

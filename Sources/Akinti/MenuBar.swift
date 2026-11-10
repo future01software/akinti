@@ -1,43 +1,120 @@
 import SwiftUI
 import AppKit
 import ServiceManagement
+import Combine
 
-/// Ana pencereyi bulur, yoksa açar; uygulamayı öne getirir. Menü çubuğu kipindeyken Dock simgesini geri getirir.
+/// Ana pencereyi ve Ayarlar'ı açar; menü çubuğu kipindeyken Dock simgesini geri getirir.
+/// SwiftUI'nin pencere açma eylemleri ana pencere ilk göründüğünde saklanır (menü çubuğu açılır penceresi bir
+/// SwiftUI sahnesinin içinde olmadığı için bu eylemlere doğrudan erişemez).
+@MainActor
 enum MainWindow {
+    static var openAction: OpenWindowAction?
+    static var settingsAction: OpenSettingsAction?
+
     static func isMainWindow(_ window: NSWindow) -> Bool { window.identifier?.rawValue.hasPrefix("main") == true }
     static var existing: NSWindow? { NSApp.windows.first { isMainWindow($0) && $0.isVisible } }
 
-    static func show(openWindow: OpenWindowAction) {
+    static func show() {
         NSApp.setActivationPolicy(.regular)
-        if let window = existing { window.makeKeyAndOrderFront(nil) } else { openWindow(id: "main") }
         NSApp.activate(ignoringOtherApps: true)
+        if let window = existing { window.makeKeyAndOrderFront(nil) }
+        else if let openAction { openAction(id: "main") }
+        else { sendReopenToSelf() } // pencere hiç açılmadıysa (ör. girişte başlatıldı): Dock'a tıklamakla aynı
+    }
+
+    static func showSettings() {
+        NSApp.activate(ignoringOtherApps: true)
+        if let settingsAction { settingsAction(); return }
+        // Yedek: uygulama menüsündeki "Ayarlar…" (⌘,) öğesini çalıştır.
+        if let menu = NSApp.mainMenu?.items.first?.submenu, let index = menu.items.firstIndex(where: { $0.keyEquivalent == "," }) {
+            menu.performActionForItem(at: index)
+        }
+    }
+
+    private static func sendReopenToSelf() {
+        let event = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEReopenApplication),
+                                           targetDescriptor: NSAppleEventDescriptor(processIdentifier: ProcessInfo.processInfo.processIdentifier),
+                                           returnID: AEReturnID(kAutoGenerateReturnID), transactionID: AETransactionID(kAnyTransactionID))
+        DispatchQueue.main.async { _ = try? event.sendEvent(options: [.noReply], timeout: 2) }
     }
 }
 
-/// Menü çubuğundaki simge: indirme varken yanında toplam hız yazar.
-struct MenuBarLabel: View {
-    @ObservedObject var store: DownloadStore
-    @Environment(\.openWindow) private var openWindow
-    private var active: Int { store.items.filter { $0.state == "İndiriliyor" }.count }
-    var body: some View {
-        label
-            // Ana pencere kapalıyken (ör. yalnızca menü çubuğu kipinde) eklentiden bağlantı gelirse pencereyi açar.
-            .onChange(of: store.mainWindowRequest) { _, _ in MainWindow.show(openWindow: openWindow) }
+/// Menü çubuğu simgesi ve açılır paneli (NSStatusItem + NSPopover).
+///
+/// SwiftUI'nin MenuBarExtra'sı yerine kullanılır: MenuBarExtra paneli ayrı bir pencere olarak açıyordu ve uygulama
+/// yalnızca menü çubuğu kipindeyken (Dock simgesi gizliyken) Sahne Yöneticisi ile birlikte simge vurgulansa da
+/// panel ekrana gelmiyordu. NSPopover doğrudan simgeye bağlıdır; Space'lerden ve Sahne Yöneticisi'nden etkilenmez.
+@MainActor
+final class StatusItemController: NSObject {
+    private let store: DownloadStore
+    private var item: NSStatusItem?
+    private let popover = NSPopover()
+    private var subscriptions = Set<AnyCancellable>()
+
+    init(store: DownloadStore) {
+        self.store = store
+        super.init()
+        popover.behavior = .transient
+        popover.animates = true
+        let panel = MenuBarPanel(store: store) { [weak self] in self?.popover.performClose(nil) }
+        popover.contentViewController = NSHostingController(rootView: Themed(store: store, appliesColorScheme: false) { panel })
+        // Simgedeki hız saniyede en fazla bir kez güncellenir.
+        store.objectWillChange
+            .throttle(for: .seconds(1), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.updateButton() } }
+            .store(in: &subscriptions)
+        // Eklentiden bağlantı gelip ana pencere kapalıysa pencereyi aç.
+        store.$mainWindowRequest.dropFirst().sink { _ in DispatchQueue.main.async { MainWindow.show() } }.store(in: &subscriptions)
+        NotificationCenter.default.publisher(for: DownloadStore.dockPolicyChanged)
+            .sink { [weak self] _ in self?.updateVisibility() }
+            .store(in: &subscriptions)
+        updateVisibility()
     }
-    @ViewBuilder private var label: some View {
-        if active > 0 {
-            Label(Format.speed(store.totalSpeed), systemImage: "arrow.down.circle.fill").labelStyle(.titleAndIcon).monospacedDigit()
-        } else {
-            Image(systemName: "arrow.down.circle")
+
+    func updateVisibility() {
+        let visible = store.preferences.showMenuBarIcon
+        if visible, item == nil {
+            let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            item.autosaveName = "AkintiStatusItem" // Barbee/Bartender gibi düzenleyiciler yerini hatırlasın
+            item.button?.target = self
+            item.button?.action = #selector(toggle(_:))
+            item.button?.imagePosition = .imageLeading
+            self.item = item
+            updateButton()
+        } else if !visible, let item {
+            popover.performClose(nil)
+            NSStatusBar.system.removeStatusItem(item)
+            self.item = nil
         }
+    }
+
+    private func updateButton() {
+        guard let button = item?.button else { return }
+        let active = store.items.contains { $0.state == "İndiriliyor" }
+        let image = NSImage(systemSymbolName: active ? "arrow.down.circle.fill" : "arrow.down.circle", accessibilityDescription: "Akıntı")
+        image?.isTemplate = true
+        button.image = image
+        let title = active ? " " + Format.speed(store.totalSpeed) : ""
+        if button.title != title {
+            button.attributedTitle = NSAttributedString(string: title, attributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)])
+        }
+        button.toolTip = "Akıntı"
+    }
+
+    @objc private func toggle(_ sender: NSStatusBarButton) {
+        if popover.isShown { popover.performClose(sender); return }
+        popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+        // Açılır pencere klavye ve fareyi hemen alsın (menü çubuğu kipinde uygulama etkin değildir).
+        NSApp.activate(ignoringOtherApps: true)
+        popover.contentViewController?.view.window?.makeKey()
     }
 }
 
 /// Menü çubuğu simgesine tıklayınca açılan panel.
 struct MenuBarPanel: View {
     @ObservedObject var store: DownloadStore
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
+    /// Açılır pencereyi kapatır (bir işlemden sonra).
+    var dismiss: () -> Void = {}
 
     private var visible: [Download] {
         let order = ["İndiriliyor": 0, "Duraklatılıyor": 1, "Bekliyor": 2, "Yeniden denenecek": 3, "Planlandı": 4, "Duraklatıldı": 5]
@@ -56,7 +133,7 @@ struct MenuBarPanel: View {
                         .font(.callout).foregroundStyle(.secondary).monospacedDigit()
                 }
                 Spacer()
-                Button { open(); store.isAdding = true } label: { Image(systemName: "plus") }
+                Button { dismiss(); MainWindow.show(); store.isAdding = true } label: { Image(systemName: "plus") }
                     .buttonStyle(.borderless).help(t("Bağlantı ekle", "Add Link"))
             }
 
@@ -92,8 +169,8 @@ struct MenuBarPanel: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 2) {
-                menuButton(t("Akıntı’yı aç", "Open Akıntı"), "macwindow") { open() }
-                menuButton(t("Ayarlar…", "Settings…"), "gearshape") { NSApp.activate(ignoringOtherApps: true); openSettings() }
+                menuButton(t("Akıntı’yı aç", "Open Akıntı"), "macwindow") { dismiss(); MainWindow.show() }
+                menuButton(t("Ayarlar…", "Settings…"), "gearshape") { dismiss(); MainWindow.showSettings() }
                 menuButton(t("Akıntı’dan çık", "Quit Akıntı"), "power") { NSApp.terminate(nil) }
             }
         }
@@ -128,7 +205,6 @@ struct MenuBarPanel: View {
         .buttonStyle(.borderless).padding(.vertical, 3)
     }
 
-    private func open() { MainWindow.show(openWindow: openWindow) }
 }
 
 /// Mac açılınca Akıntı'yı başlatma (macOS Giriş Öğeleri).

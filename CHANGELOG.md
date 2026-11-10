@@ -6,6 +6,12 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.10.2] - 2026-11-10
+
+### Düzeltildi
+- **Menü çubuğu simgesi vurgulanıyor ama panel açılmıyordu** (özellikle Sahne Yöneticisi açıkken ve Akıntı yalnızca menü çubuğunda çalışırken). SwiftUI'nin MenuBarExtra'sı paneli ayrı bir pencere olarak açıyordu; bu pencere ekrana gelmeyebiliyordu. Menü çubuğu artık macOS'un klasik yöntemiyle çalışıyor: kendi menü çubuğu öğesi (NSStatusItem) ve simgeye bağlı açılır pencere (NSPopover). Barbee/Bartender gibi düzenleyiciler simgenin yerini hatırlar.
+- Menü çubuğu kipinde “Akıntı'yı aç”, “Ayarlar…” ve eklentiden gelen bağlantılar ana pencereyi güvenilir şekilde açar.
+
 ## [0.10.1] - 2026-11-10
 
 ### Düzeltildi
@@ -168,7 +174,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.1...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/future01software/akinti/releases/tag/v0.10.2
 [0.10.1]: https://github.com/future01software/akinti/releases/tag/v0.10.1
 [0.10.0]: https://github.com/future01software/akinti/releases/tag/v0.10.0
 [0.9.0]: https://github.com/future01software/akinti/releases/tag/v0.9.0
