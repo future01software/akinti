@@ -6,6 +6,21 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.9.0] - 2026-11-10
+
+### Eklendi
+- **Homebrew'suz kurulum.** Akıntı artık ek bir kurulum gerektirmeden çalışır:
+  - **Torrent desteği (aria2) uygulamanın içinde gelir**; kütüphaneleri pakete gömülüdür, HTTPS tracker'lar için macOS'un sertifika listesi kullanılır.
+  - **yt-dlp ve FFmpeg tek tıkla kurulur**: ilk video bağlantısında ekleme penceresindeki **Kur** düğmesi veya Ayarlar → Bileşenler.
+  - yt-dlp resmi GitHub sürümünden indirilir ve SHA-256 ile doğrulanır; FFmpeg yalnızca geliştiricisinin Apple onaylı imzası doğrulanırsa kurulur.
+  - **yt-dlp otomatik güncellenir** (günde bir kez denetlenir; Ayarlar'dan kapatılabilir).
+- Ayarlar → **Bileşenler** bölümü: her bileşenin durumu, Kur/Güncelle düğmeleri, **Lisanslar…**
+- `Licenses/` klasörü: üçüncü taraf lisansları ve kaynak kodu bağlantıları.
+
+### Değişti
+- Araç arama sırası: Akıntı'nın kurdukları → uygulamanın içindekiler → Homebrew.
+- Uygulama boyutu aria2 nedeniyle ~6 MB (zip) oldu.
+
 ## [0.8.2] - 2026-11-08
 
 ### Değişti
@@ -134,7 +149,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.8.2...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/future01software/akinti/releases/tag/v0.9.0
 [0.8.2]: https://github.com/future01software/akinti/releases/tag/v0.8.2
 [0.8.1]: https://github.com/future01software/akinti/releases/tag/v0.8.1
 [0.8.0]: https://github.com/future01software/akinti/releases/tag/v0.8.0

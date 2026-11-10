@@ -97,6 +97,7 @@ enum VideoEngine {
     static var overrideExecutable: URL?
     static var executable: URL? { overrideExecutable ?? find("yt-dlp") }
     static var ffmpeg: URL? { overrideExecutable == nil ? find("ffmpeg") : nil }
+    /// Elle kurmak isteyenler için (uygulama içi "Kur" düğmesi Homebrew gerektirmez).
     static let installCommand = "brew install yt-dlp ffmpeg"
 
     private static var searchPaths: [String] {
@@ -105,8 +106,11 @@ enum VideoEngine {
         return ["/opt/homebrew/bin", "/usr/local/bin", "\(home)/.local/bin", "/opt/local/bin"] + fromEnv
     }
 
+    /// Arama sırası: Akıntı'nın kendi kurduğu araçlar (Uygulama Desteği/Akinti/Tools), uygulamanın içindekiler
+    /// (Contents/Helpers, ör. aria2), sonra Homebrew ve PATH.
     static func find(_ name: String) -> URL? {
-        for dir in searchPaths {
+        let bundled = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers", isDirectory: true).path
+        for dir in [ToolManager.folder.path, bundled] + searchPaths {
             let path = (dir as NSString).appendingPathComponent(name)
             if FileManager.default.isExecutableFile(atPath: path) { return URL(fileURLWithPath: path) }
         }
@@ -125,7 +129,7 @@ enum VideoEngine {
         case missing, failed(String)
         var errorDescription: String? {
             switch self {
-            case .missing: return t("yt-dlp kurulu değil. Terminal’de şunu çalıştırın: ", "yt-dlp is not installed. Run this in Terminal: ") + VideoEngine.installCommand
+            case .missing: return t("yt-dlp kurulu değil. Ayarlar → Bileşenler’den tek tıkla kurun.", "yt-dlp is not installed. Install it with one click in Settings → Components.")
             case .failed(let message): return message
             }
         }

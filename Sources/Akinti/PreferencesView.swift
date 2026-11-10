@@ -11,6 +11,19 @@ struct PreferencesView: View {
     @ObservedObject var store: DownloadStore
     @State private var showHelp = false
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
+    @ObservedObject private var tools = ToolManager.shared
+
+    private var aria2Status: String {
+        guard let url = TorrentEngine.executable else { return t("Bulunamadı", "Not found") }
+        if url.path.contains("/Contents/Helpers/") { return t("Uygulamayla birlikte geliyor", "Included with the app") }
+        return t("Homebrew: ", "Homebrew: ") + url.path
+    }
+
+    private func openLicenses() {
+        let bundled = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/Licenses")
+        if FileManager.default.fileExists(atPath: bundled.path) { NSWorkspace.shared.open(bundled) }
+        else { NSWorkspace.shared.open(URL(string: "https://github.com/future01software/akinti/tree/main/Licenses")!) }
+    }
     var body: some View {
         Form {
             Section(t("Dil", "Language")) {
@@ -67,6 +80,28 @@ struct PreferencesView: View {
                 Text(t("Yalnızca paylaşım hakkı olan içerikleri (ör. Linux kalıpları, açık lisanslı dosyalar) indirin.", "Only download content you have the right to share (e.g. Linux images, openly licensed files)."))
                     .font(.callout).foregroundStyle(.secondary)
             }
+            Section(t("Bileşenler", "Components")) {
+                ForEach(ManagedTool.allCases) { tool in ToolRow(tool: tool) }
+                LabeledContent {
+                    Text(aria2Status).foregroundStyle(.secondary)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("aria2")
+                        Text(t("Torrent ve magnet", "Torrents and magnet links")).font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                Toggle(t("yt-dlp’yi otomatik güncelle (günde bir kez denetler)", "Keep yt-dlp up to date (checks once a day)"), isOn: $store.preferences.autoUpdateTools)
+                if let error = tools.lastError {
+                    Label(error, systemImage: "exclamationmark.triangle.fill").font(.callout).foregroundStyle(.red)
+                }
+                HStack {
+                    Text(t("yt-dlp GitHub’daki resmi sürümünden indirilir ve SHA-256 ile doğrulanır; ffmpeg, geliştiricisinin Apple onaylı imzası denetlenerek kurulur. Homebrew’la kurulmuş araçlar da kullanılır.",
+                           "yt-dlp is downloaded from its official GitHub release and verified with SHA-256; ffmpeg is installed only if its developer’s Apple-notarized signature checks out. Tools installed with Homebrew are used too."))
+                        .font(.callout).foregroundStyle(.secondary)
+                    Spacer()
+                    Button(t("Lisanslar…", "Licenses…")) { openLicenses() }
+                }
+            }
             Section(t("Bağlantı yakalama", "Link capture")) {
                 Toggle(t("Kopyalanan indirme bağlantılarını yakala", "Capture copied download links"), isOn: $store.preferences.clipboardCapture)
                 Text(t("Bir dosya bağlantısını kopyalayıp Akıntı’ya geçtiğinizde ekleme penceresi kendiliğinden açılır. Bağlantıları pencereye sürükleyip bırakabilirsiniz de.", "When you copy a file link and switch to Akıntı, the add window opens automatically. You can also drag links into the window."))
@@ -105,7 +140,7 @@ struct PreferencesView: View {
                     Text("Akıntı " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")).foregroundStyle(.secondary)
                 }.font(.callout)
             }
-        }.formStyle(.grouped).frame(width: 600, height: 840)
+        }.formStyle(.grouped).frame(width: 620, height: 860)
         .navigationTitle(t("Ayarlar", "Settings"))
         .sheet(isPresented: $showHelp) { QuickStartView() }
         .alert(t("Ayarlar", "Settings"), isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) {
@@ -142,6 +177,42 @@ struct QuickStartView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.headline)
                 Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Ayarlar → Bileşenler: bir aracın durumu ve Kur/Güncelle düğmesi.
+struct ToolRow: View {
+    let tool: ManagedTool
+    @ObservedObject private var tools = ToolManager.shared
+
+    private var status: String {
+        if let version = ToolManager.installedVersion(tool), ToolManager.installedURL(tool) != nil { return t("Kurulu · ", "Installed · ") + version }
+        if let url = VideoEngine.find(tool.fileName) { return "Homebrew: " + url.deletingLastPathComponent().path }
+        return t("Kurulu değil", "Not installed")
+    }
+
+    var body: some View {
+        LabeledContent {
+            HStack(spacing: 10) {
+                Text(status).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                if tools.isInstalling(tool) {
+                    ProgressView(value: tools.progress[tool] ?? 0).frame(width: 90)
+                } else if ToolManager.installedURL(tool) != nil {
+                    Button(t("Güncelle", "Update")) {
+                        Task {
+                            if tool == .ytdlp { await tools.updateYtDlpIfNeeded(force: true) } else { await tools.install(tool) }
+                        }
+                    }
+                } else {
+                    Button(t("Kur", "Install")) { Task { await tools.install(tool) } }.buttonStyle(.borderedProminent)
+                }
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tool.title)
+                Text(tool.purpose).font(.callout).foregroundStyle(.secondary)
             }
         }
     }

@@ -21,7 +21,7 @@ final class TorrentEngine: @unchecked Sendable {
         case missing, failed(String)
         var errorDescription: String? {
             switch self {
-            case .missing: return t("Torrent için aria2 kurulu değil. Terminal’de şunu çalıştırın: ", "aria2 is required for torrents. Run this in Terminal: ") + TorrentEngine.installCommand
+            case .missing: return t("Torrent bileşeni (aria2) bulunamadı. Akıntı’nın GitHub’daki sürümünü kullanın veya Terminal’de: ", "The torrent component (aria2) was not found. Use the Akıntı release from GitHub, or run in Terminal: ") + TorrentEngine.installCommand
             case .failed(let message): return message
             }
         }
@@ -42,8 +42,11 @@ final class TorrentEngine: @unchecked Sendable {
                                "--stop-with-process=\(ProcessInfo.processInfo.processIdentifier)",
                                "--continue=true", "--follow-torrent=mem", "--bt-save-metadata=false", "--file-allocation=none",
                                "--max-concurrent-downloads=16", "--console-log-level=error", "--summary-interval=0",
-                               "--seed-time=0", "--bt-detach-seed-only=true"] + extraArguments
-                p.environment = VideoEngine.environment
+                               "--seed-time=0", "--bt-detach-seed-only=true"]
+                    // Pakete gömülü aria2 OpenSSL kullanır; HTTPS tracker'lar için macOS'un sertifika listesi verilir.
+                    + (FileManager.default.fileExists(atPath: "/etc/ssl/cert.pem") ? ["--ca-certificate=/etc/ssl/cert.pem"] : [])
+                    + extraArguments
+                p.environment = Self.environment(for: exe)
                 let err = Pipe()
                 p.standardOutput = FileHandle.nullDevice
                 p.standardError = err
@@ -113,6 +116,18 @@ final class TorrentEngine: @unchecked Sendable {
     }
 
     // MARK: Yardımcılar
+
+    /// Uygulamaya gömülü aria2 için OpenSSL modül klasörü ve sertifika dosyası paketin/sistemin içini gösterir.
+    static func environment(for executable: URL) -> [String: String] {
+        var env = VideoEngine.environment
+        let contents = executable.deletingLastPathComponent().deletingLastPathComponent()
+        let modules = contents.appendingPathComponent("Frameworks/ossl-modules")
+        if executable.path.contains("/Contents/Helpers/"), FileManager.default.fileExists(atPath: modules.path) {
+            env["OPENSSL_MODULES"] = modules.path
+        }
+        if FileManager.default.fileExists(atPath: "/etc/ssl/cert.pem") { env["SSL_CERT_FILE"] = "/etc/ssl/cert.pem" }
+        return env
+    }
 
     /// aria2'nin onaltılık parça bit alanını `bins` bölmeye indirger (her bölme: inmiş parçaların oranı).
     static func pieceMap(bitfield: String, pieces: Int, bins: Int = 64) -> [Double] {

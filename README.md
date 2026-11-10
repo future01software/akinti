@@ -27,7 +27,7 @@ Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yönetic
 
 **[⬇︎ En son sürümü indir (Akinti-macOS.zip)](https://github.com/future01software/akinti/releases/latest/download/Akinti-macOS.zip)** · [Tüm sürümler](https://github.com/future01software/akinti/releases) · [Değişiklik günlüğü](CHANGELOG.md)
 
-Zip’i açıp `Akıntı.app`’i Programlar klasörüne taşıyın. Uygulama henüz Apple Developer ID ile imzalı olmadığından ilk açılışta macOS uyarı verir: uygulamaya **sağ tıklayıp Aç**’ı seçin (veya Sistem Ayarları → Gizlilik ve Güvenlik → **Yine de Aç**). Video siteleri için ayrıca `brew install yt-dlp ffmpeg` gerekir.
+Zip’i açıp `Akıntı.app`’i Programlar klasörüne taşıyın. Uygulama henüz Apple Developer ID ile imzalı olmadığından ilk açılışta macOS uyarı verir: uygulamaya **sağ tıklayıp Aç**’ı seçin (veya Sistem Ayarları → Gizlilik ve Güvenlik → **Yine de Aç**). **Homebrew gerekmez:** torrent desteği uygulamayla birlikte gelir; video siteleri için gereken bileşenler ilk kullanımda tek tıkla kurulur.
 
 ## Çalıştırma
 
@@ -52,7 +52,7 @@ Sunucu bayt aralıklarını (HTTP Range) destekliyorsa dosya parçalara bölün�
 
 ## Torrent ve magnet
 
-Magnet bağlantıları ve `.torrent` dosyaları [aria2](https://aria2.github.io) ile indirilir (`brew install aria2`). Magnet bağlantısını yapıştırın, `.torrent` dosyasını pencereye sürükleyin, **Dosya → Torrent dosyası aç… (⌘O)** kullanın ya da tarayıcıda magnet bağlantısına tıklayın (önce ekleme penceresi açılır, kendiliğinden indirme başlamaz). Torrentler kendi kategorisinde görünür; ayrıntı panelinde parça haritası ve kaynak/eş sayısı gösterilir. Duraklat/devam ve uygulama yeniden açıldığında kaldığı yerden sürme desteklenir. Bitince paylaşmaya devam etmek isteğe bağlıdır (Ayarlar → Torrent; varsayılan kapalı). aria2, Akıntı kapanınca kendiliğinden kapanır.
+Magnet bağlantıları ve `.torrent` dosyaları [aria2](https://aria2.github.io) ile indirilir; aria2 uygulamanın içinde gelir, ayrıca kurulum gerekmez. Magnet bağlantısını yapıştırın, `.torrent` dosyasını pencereye sürükleyin, **Dosya → Torrent dosyası aç… (⌘O)** kullanın ya da tarayıcıda magnet bağlantısına tıklayın (önce ekleme penceresi açılır, kendiliğinden indirme başlamaz). Torrentler kendi kategorisinde görünür; ayrıntı panelinde parça haritası ve kaynak/eş sayısı gösterilir. Duraklat/devam ve uygulama yeniden açıldığında kaldığı yerden sürme desteklenir. Bitince paylaşmaya devam etmek isteğe bağlıdır (Ayarlar → Torrent; varsayılan kapalı). aria2, Akıntı kapanınca kendiliğinden kapanır.
 
 Yalnızca paylaşım hakkınız olan içerikleri indirin (ör. Linux kalıpları, açık lisanslı dosyalar).
 
@@ -62,11 +62,11 @@ Alt çubuktaki hız göstergesinden veya Ayarlar’dan toplam hız sınırı se�
 
 ## Video siteleri (YouTube, Vimeo…)
 
-Video sayfası bağlantıları [yt-dlp](https://github.com/yt-dlp/yt-dlp) ile indirilir. Bir kez kurun:
+Video sayfası bağlantıları [yt-dlp](https://github.com/yt-dlp/yt-dlp) ile indirilir; yüksek kalitede görüntü ve ses [FFmpeg](https://ffmpeg.org) ile birleştirilir. İlk video bağlantısında Akıntı bu iki bileşeni **tek tıkla** kurar (yaklaşık 65 MB, Homebrew gerekmez):
 
-```sh
-brew install yt-dlp ffmpeg
-```
+- **yt-dlp** resmi GitHub sürümünden indirilir ve aynı sürümün `SHA2-256SUMS` dosyasıyla doğrulanır; YouTube sık değiştiği için günde bir kez güncellik denetlenir (Ayarlar → Bileşenler).
+- **FFmpeg**, Apple Silicon için [Martin Riedl’in derlemesinden](https://ffmpeg.martin-riedl.de) indirilir; yalnızca geliştiricinin Apple onaylı Developer ID imzası doğrulanırsa kurulur.
+- Bileşenler `~/Library/Application Support/Akinti/Tools` içine kurulur. Homebrew ile kurulmuş `yt-dlp`/`ffmpeg` varsa onlar da kullanılır.
 
 Bağlantıyı yapıştırınca Akıntı başlığı, süreyi ve küçük resmi gösterir; kalite (En iyi, 4K, 1080p, 720p, 480p) veya yalnızca ses (M4A/MP3) seçilir. YouTube, Vimeo, Dailymotion, X, Instagram, TikTok, Twitch, SoundCloud gibi siteler otomatik tanınır; diğer siteler için ekleme penceresinde **Bağlantı türü → Video sayfası** seçilir. ffmpeg olmadan yüksek kalitede görüntü ve ses birleştirilemez (tek dosyalık sürüm indirilir). Duraklatılan video yeniden başlatıldığında yt-dlp yarım dosyadan devam eder.
 
@@ -149,6 +149,10 @@ Gerçek geçmişe ve ayarlara dokunmadan denemek için uygulama Terminal’den �
 ```sh
 open -n dist/Akıntı.app --args --state-dir /tmp/akinti-deneme --add https://example.org/dosya.zip --select-first --open-settings
 ```
+
+## Lisanslar
+
+Akıntı MIT lisanslıdır. Uygulamayla birlikte gelen aria2 (GPL v2) ve kütüphaneleri ile ilk kullanımda indirilen bileşenlerin lisansları ve kaynak kodu bağlantıları [Licenses/THIRD-PARTY.md](Licenses/THIRD-PARTY.md) dosyasındadır; uygulamada Ayarlar → Bileşenler → **Lisanslar…** ile açılır.
 
 ## Testler
 

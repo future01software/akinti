@@ -17,6 +17,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/Akinti" "$APP/Contents/MacOS/Akinti"
 # Simge: scripts/make-icon.swift ile üretilir (bkz. README).
 cp Assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# Lisanslar ve torrent bileşeni (aria2 + kütüphaneleri; bkz. Licenses/THIRD-PARTY.md)
+cp -R Licenses "$APP/Contents/Resources/Licenses"
+./scripts/bundle-aria2.sh "$APP"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

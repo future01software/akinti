@@ -11,6 +11,7 @@ struct AddLinksView: View {
     @State private var quality: VideoQuality = .p1080
     @State private var infos: [URL: VideoInfo] = [:]
     @State private var probeErrors: [URL: String] = [:]
+    @ObservedObject private var tools = ToolManager.shared
     @State private var hasEngine = VideoEngine.executable != nil
     @State private var hasFFmpeg = VideoEngine.ffmpeg != nil
     @State private var wholePlaylist = true
@@ -96,6 +97,10 @@ struct AddLinksView: View {
             .frame(height: 150 + (videoLinks.isEmpty ? 0 : 40) + (mixedPlaylists.isEmpty ? 0 : 40) + (schedule ? 40 : 0))
             .padding(.horizontal, -20)
 
+            if !videoLinks.isEmpty && hasEngine && !hasFFmpeg && !tools.isInstalling(.ffmpeg) {
+                Button(t("Yüksek kalite için ffmpeg’i kur", "Install ffmpeg for high quality")) { Task { await installVideoTools() } }
+                    .buttonStyle(.link)
+            }
             if !videoLinks.isEmpty && hasEngine && !hasFFmpeg {
                 Text(t("ffmpeg kurulu değil: yüksek kaliteli görüntü ve ses birleştirilemez, tek dosyalık en iyi sürüm (çoğunlukla 720p) indirilir; MP3 yerine M4A kaydedilir.",
                        "ffmpeg is not installed: high-quality video and audio can’t be merged, so the best single-file version (often 720p) is downloaded, and M4A is saved instead of MP3."))
@@ -206,28 +211,34 @@ struct AddLinksView: View {
 
     private var installBox: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(t("Video indirmek için yt-dlp gerekli", "yt-dlp is required to download videos"), systemImage: "puzzlepiece.extension")
+            Label(t("Video indirmek için bir bileşen gerekli", "A component is needed to download videos"), systemImage: "puzzlepiece.extension")
                 .font(.headline)
-            Text(t("yt-dlp, YouTube ve yüzlerce siteden video indiren ücretsiz, açık kaynak bir araçtır. Terminal’de şu komutu çalıştırın, ardından Tekrar dene’ye basın:",
-                   "yt-dlp is a free, open-source tool that downloads video from YouTube and hundreds of other sites. Run this in Terminal, then press Try Again:"))
+            Text(t("Akıntı, YouTube ve yüzlerce siteden video indiren açık kaynak yt-dlp’yi ve görüntü/ses birleştiren ffmpeg’i resmi kaynaklarından indirip doğrular (yaklaşık 65 MB). Homebrew gerekmez.",
+                   "Akıntı downloads and verifies the open-source yt-dlp (video from YouTube and hundreds of sites) and ffmpeg (merges video and audio) from their official sources (about 65 MB). No Homebrew needed."))
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             HStack {
-                Text(VideoEngine.installCommand).font(.system(.callout, design: .monospaced)).textSelection(.enabled)
-                    .padding(.horizontal, 8).padding(.vertical, 4).background(.background, in: RoundedRectangle(cornerRadius: 5))
-                Button(t("Kopyala", "Copy")) {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(VideoEngine.installCommand, forType: .string)
+                if tools.isInstalling(.ytdlp) || tools.isInstalling(.ffmpeg) {
+                    ProgressView(value: tools.progress[.ytdlp] ?? tools.progress[.ffmpeg] ?? 0).frame(width: 180)
+                    Text(tools.isInstalling(.ytdlp) ? "yt-dlp…" : "ffmpeg…").font(.callout).foregroundStyle(.secondary)
+                } else {
+                    Button { Task { await installVideoTools() } } label: { Label(t("Kur", "Install"), systemImage: "arrow.down.circle") }
+                        .buttonStyle(.borderedProminent)
                 }
                 Spacer()
-                Button(t("Tekrar dene", "Try Again")) {
-                    hasEngine = VideoEngine.executable != nil
-                    hasFFmpeg = VideoEngine.ffmpeg != nil
-                    Task { await probeVideos() }
-                }
+            }
+            if let error = tools.lastError {
+                Label(error, systemImage: "exclamationmark.triangle.fill").font(.callout).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(12)
         .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func installVideoTools() async {
+        await tools.installMissing([.ytdlp, .ffmpeg])
+        hasEngine = VideoEngine.executable != nil
+        hasFFmpeg = VideoEngine.ffmpeg != nil
+        await probeVideos()
     }
 
     // MARK: İşlemler

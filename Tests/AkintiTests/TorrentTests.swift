@@ -11,6 +11,8 @@ final class TorrentTests: XCTestCase {
     private let seederPort = Int.random(in: 30000...40000)
 
     override func setUp() async throws {
+        // AKINTI_TEST_ARIA2: paketteki aria2 ile denemek için (ör. dist/Akıntı.app/Contents/Helpers/aria2c)
+        if let path = ProcessInfo.processInfo.environment["AKINTI_TEST_ARIA2"] { TorrentEngine.overrideExecutable = URL(fileURLWithPath: path) }
         guard let aria2 = TorrentEngine.executable else { throw XCTSkip("aria2 kurulu değil") }
         root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -35,6 +37,7 @@ final class TorrentTests: XCTestCase {
     }
 
     override func tearDown() {
+        TorrentEngine.overrideExecutable = nil
         for p in processes where p.isRunning { p.terminate(); p.waitUntilExit() }
         if let root { try? FileManager.default.removeItem(at: root) }
     }

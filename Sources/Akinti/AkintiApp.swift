@@ -441,6 +441,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async { Self.updateDockIcon() }
         }
         NotificationCenter.default.addObserver(forName: DownloadStore.dockPolicyChanged, object: nil, queue: .main) { _ in Self.updateDockIcon() }
+        // YouTube sık değiştiği için Akıntı'nın kurduğu yt-dlp günde bir kez denetlenip güncellenir.
+        if Self.store?.preferences.autoUpdateTools == true {
+            Task { @MainActor in await ToolManager.shared.updateYtDlpIfNeeded() }
+        }
     }
 
     static func updateDockIcon() {
