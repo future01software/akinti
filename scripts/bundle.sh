@@ -17,6 +17,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/Akinti" "$APP/Contents/MacOS/Akinti"
 # Simge: scripts/make-icon.swift ile üretilir (bkz. README).
 cp Assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# Desteklenen diller: macOS'un kendi menü ve pencere metinleri (Hakkında, Gizle, Çık…) Türkçe/İngilizce görünsün.
+mkdir -p "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/tr.lproj"
 # Lisanslar ve torrent bileşeni (aria2 + kütüphaneleri; bkz. Licenses/THIRD-PARTY.md)
 cp -R Licenses "$APP/Contents/Resources/Licenses"
 ./scripts/bundle-aria2.sh "$APP"
@@ -35,6 +37,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$VERSION</string>
+<key>CFBundleVersion</key><string>$VERSION</string>
+<key>NSHumanReadableCopyright</key><string>© 2026 Akıntı · MIT</string>
+<key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleLocalizations</key><array><string>en</string><string>tr</string></array>
+<key>CFBundleAllowMixedLocalizations</key><true/>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>CFBundleURLTypes</key><array><dict>

@@ -180,6 +180,7 @@ struct MenuBarPanel: View {
             VStack(alignment: .leading, spacing: 2) {
                 menuButton(t("Akıntı’yı aç", "Open Akıntı"), "macwindow") { dismiss(); MainWindow.show() }
                 menuButton(t("Ayarlar…", "Settings…"), "gearshape") { dismiss(); MainWindow.showSettings() }
+                menuButton(t("Akıntı Hakkında", "About Akıntı"), "info.circle") { dismiss(); AboutPanel.show() }
                 menuButton(t("Akıntı’dan çık", "Quit Akıntı"), "power") { NSApp.terminate(nil) }
             }
         }

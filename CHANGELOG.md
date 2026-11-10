@@ -6,6 +6,14 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [1.0.1] - 2026-11-10
+
+### Eklendi
+- **“Akıntı Hakkında” penceresi zenginleştirildi**: kısa tanıtım, özellikler, GitHub / Sürüm notları / Hata bildir / Lisanslar bağlantıları, telif satırı. Menü çubuğu panelinden de açılır.
+
+### Değişti
+- Uygulama Türkçe ve İngilizce desteklediğini macOS'a bildiriyor: macOS'un kendi metinleri (Hakkında'daki “Sürüm”, uygulama menüsündeki Gizle/Çık…) Mac'in diline göre Türkçe görünür.
+
 ## [1.0.0] - 2026-11-10
 
 İlk kararlı sürüm.
@@ -204,7 +212,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/future01software/akinti/releases/tag/v1.0.1
 [1.0.0]: https://github.com/future01software/akinti/releases/tag/v1.0.0
 [0.11.0]: https://github.com/future01software/akinti/releases/tag/v0.11.0
 [0.10.3]: https://github.com/future01software/akinti/releases/tag/v0.10.3

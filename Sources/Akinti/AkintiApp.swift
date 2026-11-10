@@ -81,6 +81,9 @@ struct ContentView: View {
             openRequestedPopups() // pencere açılmadan önce eklenen indirmeler için
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
             if CommandLine.arguments.contains("--select-first"), let first = visible.first(where: { $0.state == "İndiriliyor" }) ?? visible.first { selection = [first.id] }
+            if CommandLine.arguments.contains("--show-about") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { AboutPanel.show() }
+            }
             if CommandLine.arguments.contains("--open-settings") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { openSettings() }
             }
@@ -560,6 +563,7 @@ final class AppChrome: ObservableObject {
     ///   --add <bağlantı>      açılışta indirme ekler (birden çok kez verilebilir)
     ///   --select-first        açılışta ilk indirilen (yoksa ilk) satırı seçer
     ///   --open-settings       açılışta Ayarlar penceresini açar
+    ///   --show-about          açılışta "Akıntı Hakkında" penceresini açar
     init() {
         let args = CommandLine.arguments
         let stateDir = args.firstIndex(of: "--state-dir").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1], isDirectory: true) : nil }
@@ -603,6 +607,9 @@ struct AkintiCommands: Commands {
     /// Dil değişince menü başlıkları yenilensin diye (store izlenmez).
     let language: String
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            Button(t("Akıntı Hakkında", "About Akıntı")) { AboutPanel.show() }
+        }
         CommandGroup(replacing: .newItem) {
             Button(t("Bağlantı ekle…", "Add Link…")) { store.isAdding = true }.keyboardShortcut("n")
             Button(t("Torrent dosyası aç…", "Open Torrent File…")) { TorrentFilePicker.choose(for: store) }.keyboardShortcut("o")
