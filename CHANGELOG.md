@@ -6,6 +6,15 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [1.0.3] - 2026-11-10
+
+### Düzeltildi
+- **Uygulama içi güncellemeden sonra Akıntı'nın kapanmaması.** Güncelleme indirildikten sonra açık kalan ilerleme penceresi kapanmayı engelliyordu; eski sürüm açık kalıyor, yeni sürüm yalnızca diske konuyordu. Artık ilerleme penceresi önce kapanır, Akıntı kapanıp yeni sürümle açılır; yine de kapanmazsa indirmelerin durumu kaydedilip kapatılır. Değiştirme betiği de yeni sürümü çalışan bir uygulamanın altına koymaz.
+- **Not:** 1.0.0–1.0.2'den bu sürüme geçerken Akıntı kendiliğinden yeniden açılmazsa bir kez kapatıp açın; sonraki güncellemeler sorunsuz olur.
+
+### Eklendi
+- Geliştirici seçeneği `--debug-install-update <zip> <sürüm>`: güncelleyiciyi yerel bir paketle uçtan uca dener.
+
 ## [1.0.2] - 2026-11-10
 
 ### Düzeltildi
@@ -217,7 +226,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.2...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/future01software/akinti/releases/tag/v1.0.3
 [1.0.2]: https://github.com/future01software/akinti/releases/tag/v1.0.2
 [1.0.1]: https://github.com/future01software/akinti/releases/tag/v1.0.1
 [1.0.0]: https://github.com/future01software/akinti/releases/tag/v1.0.0

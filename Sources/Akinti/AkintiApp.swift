@@ -81,6 +81,14 @@ struct ContentView: View {
             openRequestedPopups() // pencere açılmadan önce eklenen indirmeler için
             // Geliştirici seçeneği: --select-first ilk satırı seçer (ayrıntı panelini denemek için).
             if CommandLine.arguments.contains("--select-first"), let first = visible.first(where: { $0.state == "İndiriliyor" }) ?? visible.first { selection = [first.id] }
+            // Geliştirici seçeneği: --debug-install-update <zip> <sürüm> — güncelleyiciyi yerel bir paketle uçtan uca dener.
+            let args = CommandLine.arguments
+            if let i = args.firstIndex(of: "--debug-install-update"), i + 2 < args.count {
+                let zip = URL(fileURLWithPath: args[i + 1])
+                let release = Updater.Release(version: args[i + 2], notes: "", pageURL: zip, zipURL: zip,
+                                              sha256: (try? ToolManager.sha256(of: zip)).map { "sha256:" + $0 })
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) { Task { await Updater.shared.install(release) } }
+            }
             if CommandLine.arguments.contains("--show-about") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { AboutPanel.show() }
             }
@@ -565,6 +573,7 @@ final class AppChrome: ObservableObject {
     ///   --select-first        açılışta ilk indirilen (yoksa ilk) satırı seçer
     ///   --open-settings       açılışta Ayarlar penceresini açar
     ///   --show-about          açılışta "Akıntı Hakkında" penceresini açar
+    ///   --debug-install-update <zip> <sürüm>  güncelleyiciyi yerel bir paketle dener (uygulamanın kendisini değiştirir)
     init() {
         let args = CommandLine.arguments
         let stateDir = args.firstIndex(of: "--state-dir").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1], isDirectory: true) : nil }

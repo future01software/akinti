@@ -19,7 +19,7 @@ final class Updater: ObservableObject {
     }
 
     enum Phase: Equatable {
-        case idle, checking, upToDate, available(Release), downloading(Double), installing, failed(String)
+        case idle, checking, upToDate, available(Release), downloading(Double), installing, restarting, failed(String)
     }
 
     @Published private(set) var phase: Phase = .idle
@@ -89,6 +89,22 @@ final class Updater: ObservableObject {
         return false
     }
 
+    /// Uygulamayı güncelleme için kapatır. Betik, uygulama kapanınca eski sürümü yenisiyle değiştirip yeniden açar.
+    ///
+    /// Önceden doğrudan `NSApp.terminate` çağrılıyordu; ilerleme penceresi (sheet) açıkken SwiftUI kapanmayı
+    /// iptal ediyor, uygulama açık kalıyordu. Artık önce ilerleme penceresi kapanır (phase = .restarting),
+    /// sonra uygulama kapanır; yine kapanmazsa indirmelerin durumu kaydedilip süreç sonlandırılır.
+    static func quitForUpdate() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            for window in NSApp.windows { window.attachedSheet.map { window.endSheet($0) } }
+            NSApp.terminate(nil)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            AppDelegate.store?.prepareForQuit()
+            exit(0)
+        }
+    }
+
     // MARK: Temizlik
 
     /// Önceki güncellemelerden ve bileşen kurulumlarından kalan geçici dosyaları siler (açılışta çağrılır).
@@ -147,10 +163,7 @@ final class Updater: ObservableObject {
                 try? FileManager.default.removeItem(at: newApp.deletingLastPathComponent())
                 throw error
             }
-            if relaunch {
-                // Uygulama kapanınca betik eski sürümü yenisiyle değiştirip Akıntı'yı yeniden açar.
-                NSApp.terminate(nil)
-            }
+            if relaunch { Self.quitForUpdate() ; phase = .restarting }
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -225,6 +238,11 @@ final class Updater: ObservableObject {
         #!/bin/sh
         # Akıntı güncelleyicisi: uygulama kapanana kadar bekler (en fazla 30 sn), sonra değiştirir.
         i=0; while [ \(pid) -gt 0 ] && kill -0 \(pid) 2>/dev/null && [ $i -lt 150 ]; do sleep 0.2; i=$((i+1)); done
+        # Hâlâ açıksa kapat: yeni sürüm çalışan bir uygulamanın altına konmaz.
+        if [ \(pid) -gt 0 ] && kill -0 \(pid) 2>/dev/null; then
+          kill -TERM \(pid) 2>/dev/null; j=0; while kill -0 \(pid) 2>/dev/null && [ $j -lt 25 ]; do sleep 0.2; j=$((j+1)); done
+          kill -0 \(pid) 2>/dev/null && kill -KILL \(pid) 2>/dev/null; sleep 0.5
+        fi
         if mv \(q(target.path)) \(q(backup.path)); then
           if mv \(q(newApp.path)) \(q(target.path)); then rm -rf \(q(backup.path)); else mv \(q(backup.path)) \(q(target.path)); fi
         fi
