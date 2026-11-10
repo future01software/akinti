@@ -30,6 +30,9 @@ final class Updater: ObservableObject {
     static let bundleID = "org.akinti.downloads"
     static var currentVersion: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0" }
 
+    /// Karşılaştırmada kullanılan yüklü sürüm (testlerde değiştirilir).
+    var installedVersion = Updater.currentVersion
+
     var available: Release? { if case .available(let r) = phase { return r } else { return nil } }
     var isBusyInstalling: Bool { if case .downloading = phase { return true }; return phase == .installing }
 
@@ -49,7 +52,7 @@ final class Updater: ObservableObject {
             let (data, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, http.statusCode != 200 { throw UpdateError.network("HTTP \(http.statusCode)") }
             guard let release = Self.parseRelease(data) else { throw UpdateError.badRelease }
-            if Self.isNewer(release.version, than: Self.currentVersion) {
+            if Self.isNewer(release.version, than: installedVersion) {
                 phase = .available(release)
                 if !userInitiated { promptVisible = true }
             } else {
