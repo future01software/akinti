@@ -105,6 +105,10 @@ final class Updater: ObservableObject {
         }
     }
 
+    /// Güncelleme dosyalarının (zip, açılan paket, betik) konduğu klasör. Testler her biri için ayrı klasör verir;
+    /// paralel çalışan testler ortak geçici klasörde birbirinin dosyalarını saymasın.
+    nonisolated(unsafe) static var workFolder = FileManager.default.temporaryDirectory
+
     // MARK: Temizlik
 
     /// Önceki güncellemelerden ve bileşen kurulumlarından kalan geçici dosyaları siler (açılışta çağrılır).
@@ -190,7 +194,7 @@ final class Updater: ObservableObject {
                     return continuation.resume(throwing: UpdateError.network("HTTP \(http.statusCode)"))
                 }
                 guard let location else { return continuation.resume(throwing: UpdateError.network("?")) }
-                let out = FileManager.default.temporaryDirectory.appendingPathComponent("akinti-update-\(UUID().uuidString).zip")
+                let out = Self.workFolder.appendingPathComponent("akinti-update-\(UUID().uuidString).zip")
                 do { try FileManager.default.moveItem(at: location, to: out); continuation.resume(returning: out) }
                 catch { continuation.resume(throwing: UpdateError.network(error.localizedDescription)) }
             }
@@ -204,7 +208,7 @@ final class Updater: ObservableObject {
 
     /// Zip'i açar; içinde aynı kimlikli, beklenen sürümde ve imzası bozulmamış Akıntı.app olmalı.
     nonisolated static func unpackAndValidate(_ zip: URL, expectedVersion: String) throws -> URL {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("akinti-update-\(UUID().uuidString)")
+        let folder = Self.workFolder.appendingPathComponent("akinti-update-\(UUID().uuidString)")
         // Doğrulama başarısız olursa açılan paket geride kalmasın (Spotlight/Launchpad'de fazladan "Akıntı" görünüyordu).
         do { return try unpack(zip, into: folder, expectedVersion: expectedVersion) }
         catch { try? FileManager.default.removeItem(at: folder); throw error }
@@ -252,7 +256,7 @@ final class Updater: ObservableObject {
         \(relaunch ? "open \(q(target.path))" : ":")
         rm -f "$0"
         """
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("akinti-update-\(UUID().uuidString).sh")
+        let url = Self.workFolder.appendingPathComponent("akinti-update-\(UUID().uuidString).sh")
         try script.write(to: url, atomically: true, encoding: .utf8)
         return url
     }

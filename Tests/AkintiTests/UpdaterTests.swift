@@ -6,9 +6,13 @@ final class UpdaterTests: XCTestCase {
     private var root: URL!
     override func setUp() async throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("tmp"), withIntermediateDirectories: true)
+        Updater.workFolder = root.appendingPathComponent("tmp")
     }
-    override func tearDown() async throws { try? FileManager.default.removeItem(at: root) }
+    override func tearDown() async throws {
+        Updater.workFolder = FileManager.default.temporaryDirectory
+        try? FileManager.default.removeItem(at: root)
+    }
 
     func testVersionComparison() {
         XCTAssertTrue(Updater.isNewer("0.11.0", than: "0.10.3"))
@@ -64,7 +68,7 @@ final class UpdaterTests: XCTestCase {
     }
 
     private var tempLeftovers: Int {
-        ((try? FileManager.default.contentsOfDirectory(atPath: FileManager.default.temporaryDirectory.path)) ?? []).filter { $0.hasPrefix("akinti-update-") }.count
+        ((try? FileManager.default.contentsOfDirectory(atPath: Updater.workFolder.path)) ?? []).filter { $0.hasPrefix("akinti-update-") }.count
     }
 
     func testValidatesDownloadedBundle() throws {
@@ -77,7 +81,7 @@ final class UpdaterTests: XCTestCase {
     }
 
     func testRemovesLeftovers() throws {
-        let folder = root.appendingPathComponent("tmp"); try FileManager.default.createDirectory(at: folder.appendingPathComponent("akinti-update-1/Akıntı.app"), withIntermediateDirectories: true)
+        let folder = root.appendingPathComponent("leftovers"); try FileManager.default.createDirectory(at: folder.appendingPathComponent("akinti-update-1/Akıntı.app"), withIntermediateDirectories: true)
         try Data().write(to: folder.appendingPathComponent("akinti-update-2.sh"))
         try Data().write(to: folder.appendingPathComponent("baska-dosya.txt"))
         Updater.removeLeftovers(in: folder)
