@@ -467,6 +467,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Tarayıcı eklentisi köprüsünü kurulu Chrome/Brave/Edge/Arc… tarayıcılarına kaydet (uygulama taşınırsa yolu günceller).
         BrowserBridge.register()
         BrowserBridge.syncInstalledExtension()
+        Updater.removeLeftovers()
         // Akıntı'nın yeni sürümü günde bir kez denetlenir (açılıştan biraz sonra).
         if Self.store?.preferences.autoCheckUpdates == true {
             Task { @MainActor in try? await Task.sleep(nanoseconds: 3_000_000_000); await Updater.shared.check(userInitiated: false) }

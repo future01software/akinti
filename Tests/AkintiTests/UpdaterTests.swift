@@ -63,10 +63,25 @@ final class UpdaterTests: XCTestCase {
         XCTAssertEqual(p.terminationStatus, 0, "\(tool) \(args)")
     }
 
+    private var tempLeftovers: Int {
+        ((try? FileManager.default.contentsOfDirectory(atPath: FileManager.default.temporaryDirectory.path)) ?? []).filter { $0.hasPrefix("akinti-update-") }.count
+    }
+
     func testValidatesDownloadedBundle() throws {
-        XCTAssertNoThrow(try Updater.unpackAndValidate(try fakeApp(version: "9.9.9", marker: "ok"), expectedVersion: "9.9.9"))
+        let before = tempLeftovers
+        let app = try Updater.unpackAndValidate(try fakeApp(version: "9.9.9", marker: "ok"), expectedVersion: "9.9.9")
+        try FileManager.default.removeItem(at: app.deletingLastPathComponent())
         XCTAssertThrowsError(try Updater.unpackAndValidate(try fakeApp(version: "9.9.9", marker: "x"), expectedVersion: "9.9.8")) // sürüm uyuşmuyor
         XCTAssertThrowsError(try Updater.unpackAndValidate(try fakeApp(version: "9.9.9", bundleID: "com.kotu.app", marker: "x"), expectedVersion: "9.9.9"))
+        XCTAssertEqual(tempLeftovers, before, "başarısız doğrulama geçici klasör bırakmamalı")
+    }
+
+    func testRemovesLeftovers() throws {
+        let folder = root.appendingPathComponent("tmp"); try FileManager.default.createDirectory(at: folder.appendingPathComponent("akinti-update-1/Akıntı.app"), withIntermediateDirectories: true)
+        try Data().write(to: folder.appendingPathComponent("akinti-update-2.sh"))
+        try Data().write(to: folder.appendingPathComponent("baska-dosya.txt"))
+        Updater.removeLeftovers(in: folder)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["baska-dosya.txt"])
     }
 
     /// Uçtan uca: indir (file://) → SHA-256 → aç ve doğrula → değiştirme betiği → hedef yeni sürümle değişir.
@@ -93,5 +108,7 @@ final class UpdaterTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: target.appendingPathComponent("Contents/MacOS/Akinti"), encoding: .utf8), "#!/bin/sh\necho yeni\n")
         let leftovers = try FileManager.default.contentsOfDirectory(atPath: installedFolder.path)
         XCTAssertEqual(leftovers, ["Akıntı.app"], "yedek silinmeli")
+        try await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertEqual(tempLeftovers, 0, "betik geçici klasörü silmeli")
     }
 }

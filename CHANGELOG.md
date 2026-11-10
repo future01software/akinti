@@ -6,6 +6,11 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [1.0.2] - 2026-11-10
+
+### Düzeltildi
+- **Spotlight ve Launchpad'de birden fazla “Akıntı” görünmesi.** Güncelleyici, indirdiği paketi açtığı geçici klasörü silmiyordu. Artık geçici dosyalar başarıda da hatada da siliniyor; Akıntı açılışta önceki güncellemelerden kalanları temizleyip macOS'un uygulama kaydından da çıkarıyor.
+
 ## [1.0.1] - 2026-11-10
 
 ### Eklendi
@@ -212,7 +217,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.1...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/future01software/akinti/releases/tag/v1.0.2
 [1.0.1]: https://github.com/future01software/akinti/releases/tag/v1.0.1
 [1.0.0]: https://github.com/future01software/akinti/releases/tag/v1.0.0
 [0.11.0]: https://github.com/future01software/akinti/releases/tag/v0.11.0

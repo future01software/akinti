@@ -89,6 +89,26 @@ final class Updater: ObservableObject {
         return false
     }
 
+    // MARK: Temizlik
+
+    /// Önceki güncellemelerden ve bileşen kurulumlarından kalan geçici dosyaları siler (açılışta çağrılır).
+    nonisolated static func removeLeftovers(in folder: URL = FileManager.default.temporaryDirectory) {
+        let prefixes = ["akinti-update-", "akinti-yt-dlp-", "akinti-ffmpeg-"]
+        let items = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        let lsregister = URL(fileURLWithPath: "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister")
+        for name in items where prefixes.contains(where: name.hasPrefix) {
+            let item = folder.appendingPathComponent(name)
+            // İçinde uygulama varsa önce macOS'un uygulama kaydından çıkar (Spotlight / "Birlikte Aç" listesinde görünmesin).
+            let app = item.appendingPathComponent("Akıntı.app")
+            if FileManager.default.fileExists(atPath: app.path), FileManager.default.isExecutableFile(atPath: lsregister.path) {
+                let p = Process(); p.executableURL = lsregister; p.arguments = ["-u", app.path]
+                p.standardOutput = FileHandle.nullDevice; p.standardError = FileHandle.nullDevice
+                try? p.run(); p.waitUntilExit()
+            }
+            try? FileManager.default.removeItem(at: item)
+        }
+    }
+
     // MARK: Kurulum
 
     enum UpdateError: LocalizedError {
@@ -117,11 +137,16 @@ final class Updater: ObservableObject {
             guard try ToolManager.sha256(of: zip) == expected else { throw UpdateError.checksum }
             phase = .installing
             let newApp = try Self.unpackAndValidate(zip, expectedVersion: release.version)
-            let script = try Self.writeInstallScript(newApp: newApp, target: appURL, pid: relaunch ? ProcessInfo.processInfo.processIdentifier : 0, relaunch: relaunch)
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/bin/sh")
-            process.arguments = [script.path]
-            try process.run()
+            do {
+                let script = try Self.writeInstallScript(newApp: newApp, target: appURL, pid: relaunch ? ProcessInfo.processInfo.processIdentifier : 0, relaunch: relaunch)
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/bin/sh")
+                process.arguments = [script.path]
+                try process.run()
+            } catch {
+                try? FileManager.default.removeItem(at: newApp.deletingLastPathComponent())
+                throw error
+            }
             if relaunch {
                 // Uygulama kapanınca betik eski sürümü yenisiyle değiştirip Akıntı'yı yeniden açar.
                 NSApp.terminate(nil)
@@ -167,6 +192,12 @@ final class Updater: ObservableObject {
     /// Zip'i açar; içinde aynı kimlikli, beklenen sürümde ve imzası bozulmamış Akıntı.app olmalı.
     nonisolated static func unpackAndValidate(_ zip: URL, expectedVersion: String) throws -> URL {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("akinti-update-\(UUID().uuidString)")
+        // Doğrulama başarısız olursa açılan paket geride kalmasın (Spotlight/Launchpad'de fazladan "Akıntı" görünüyordu).
+        do { return try unpack(zip, into: folder, expectedVersion: expectedVersion) }
+        catch { try? FileManager.default.removeItem(at: folder); throw error }
+    }
+
+    private nonisolated static func unpack(_ zip: URL, into folder: URL, expectedVersion: String) throws -> URL {
         let ditto = Process()
         ditto.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
         ditto.arguments = ["-x", "-k", zip.path, folder.path]
@@ -198,7 +229,10 @@ final class Updater: ObservableObject {
           if mv \(q(newApp.path)) \(q(target.path)); then rm -rf \(q(backup.path)); else mv \(q(backup.path)) \(q(target.path)); fi
         fi
         xattr -dr com.apple.quarantine \(q(target.path)) 2>/dev/null
+        # Geçici klasör ve bu betik silinir (geride Spotlight'ta görünen kopya kalmasın).
+        rm -rf \(q(newApp.deletingLastPathComponent().path))
         \(relaunch ? "open \(q(target.path))" : ":")
+        rm -f "$0"
         """
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("akinti-update-\(UUID().uuidString).sh")
         try script.write(to: url, atomically: true, encoding: .utf8)
