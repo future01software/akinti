@@ -13,9 +13,9 @@ Bu dosyalar `Akıntı.app/Contents/Helpers` ve `Contents/Frameworks` içinde, Ho
 | libssh2 | 1.11.x | BSD 3 maddeli (`libssh2-COPYING.txt`) | https://github.com/libssh2/libssh2 |
 | c-ares | 1.34.x | MIT (`c-ares-LICENSE.md`) | https://github.com/c-ares/c-ares |
 | SQLite | 3.x | Kamu malı (public domain) | https://sqlite.org/src |
-| GNU gettext (libintl) | 0.21.x | LGPL 2.1 veya sonrası | https://ftp.gnu.org/gnu/gettext/ |
+| GNU gettext (libintl) | 0.21.x | LGPL 2.1 veya sonrası (`LGPL-2.1.txt`) | https://ftp.gnu.org/gnu/gettext/ |
 
-GPL v2 gereği: aria2'nin kaynak kodu yukarıdaki bağlantıdan alınabilir; ayrıca istek üzerine sağlanır (GitHub'da issue açın). libintl ayrı bir dinamik kütüphanedir ve değiştirilebilir.
+GPL v2 gereği: aria2'nin kaynak kodu yukarıdaki bağlantıdan alınabilir; ayrıca istek üzerine sağlanır (GitHub'da issue açın). libintl ayrı bir dinamik kütüphanedir (`Contents/Frameworks/libintl.8.dylib`); LGPL gereği kullanıcı tarafından değiştirilebilir.
 
 ## İlk kullanımda kullanıcının isteğiyle indirilenler
 

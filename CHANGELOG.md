@@ -6,6 +6,18 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [1.0.0] - 2026-11-10
+
+İlk kararlı sürüm.
+
+### Eklendi
+- İngilizce README (`README.en.md`), README'ye özellik listesi, **Yasal uyarı** ve **Gizlilik** bölümleri.
+- Pakete gömülü libintl için LGPL 2.1 lisans metni (`Licenses/LGPL-2.1.txt`).
+
+### Değişti
+- README'deki video ekran görüntüsü açık lisanslı bir videoyla (Big Buck Bunny, © Blender Vakfı, CC BY 3.0) değiştirildi.
+- Ekleme penceresindeki açıklama satırı artık kesilmeden alt satıra geçiyor.
+
 ## [0.11.0] - 2026-11-10
 
 ### Eklendi
@@ -192,7 +204,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.11.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/future01software/akinti/releases/tag/v1.0.0
 [0.11.0]: https://github.com/future01software/akinti/releases/tag/v0.11.0
 [0.10.3]: https://github.com/future01software/akinti/releases/tag/v0.10.3
 [0.10.2]: https://github.com/future01software/akinti/releases/tag/v0.10.2

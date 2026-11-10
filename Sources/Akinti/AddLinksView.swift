@@ -48,6 +48,7 @@ struct AddLinksView: View {
                     Text(t("Yeni indirme", "New Download")).font(.title2.bold())
                     Text(t("Dosya, video sayfası (YouTube, Vimeo…) veya magnet bağlantılarını yapıştırın; her satıra bir bağlantı.",
                            "Paste file, video page (YouTube, Vimeo…) or magnet links, one per line.")).font(.callout).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 

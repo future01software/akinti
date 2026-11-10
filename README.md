@@ -9,7 +9,16 @@
   <a href="LICENSE"><img alt="Lisans: MIT" src="https://img.shields.io/badge/lisans-MIT-green"></a>
 </p>
 
-Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yöneticisi. Doğrudan dosya bağlantılarının yanında YouTube ve diğer video sitelerinden de indirir. MIT lisanslıdır. macOS 14 veya üzeri gerekir.
+**Türkçe** · [English](README.en.md)
+
+**Mac için ücretsiz, açık kaynak indirme yöneticisi.** IDM düzeninde, macOS'un kendi görünümüyle (SwiftUI). Apple Silicon, macOS 14 veya üzeri.
+
+- ⚡️ **Çok bağlantılı hızlı indirme**: dosya 8 parçaya bölünüp aynı anda iner; duraklat, kaldığı yerden sürdür
+- 🎬 **YouTube ve yüzlerce video sitesi**: kalite seçimi, yalnızca ses (MP3/M4A), oynatma listeleri
+- 🧲 **Torrent ve magnet**: kurulum gerektirmez
+- 🧩 **Chrome eklentisi** (Brave, Edge, Arc): sağ tıkla “Akıntı ile indir”, IDM gibi indirme yakalama
+- 📊 **Menü çubuğu**: anlık hız, indirmeleri üst bardan yönet
+- 🔄 **Kendini günceller**, Türkçe/İngilizce, açık/koyu tema; reklam yok, veri toplamaz
 
 <p align="center"><img src="docs/ekran-ana.png" alt="Akıntı ana penceresi: kategoriler, çok bağlantılı indirmeler ve parçalı ilerleme çubuğu"></p>
 
@@ -20,6 +29,8 @@ Apple Silicon Mac için SwiftUI ile geliştirilen açık kaynak indirme yönetic
 | İndirme penceresi | Tamamlandı |
 |---|---|
 | <img src="docs/ekran-indirme-penceresi.png" alt="IDM tarzı indirme penceresi: parçalı çubuk, hız, kalan süre, duraklat"> | <img src="docs/ekran-tamamlandi.png" alt="İndirme tamamlandı penceresi: Aç, Finder’da göster"> |
+
+<sub>Ekran görüntüsündeki video: <a href="https://peach.blender.org">Big Buck Bunny</a> © Blender Vakfı, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</sub>
 
 <p align="center"><img src="docs/screen-english-light.png" width="80%" alt="English interface in light mode"><br><sub>İngilizce arayüz, açık tema</sub></p>
 
@@ -115,7 +126,7 @@ Dağıtım arşivi `dist/Akinti-macOS.zip` dosyasıdır. Paket imzalanmadan önc
 
 ## Geliştirme planı
 
-Henüz uygulanmamış özellikler: tarayıcı uzantısı, Developer ID imzası/notarizasyon ve oturum/kimlik doğrulama yönetimi. Bu sürüm IDM’nin tüm özelliklerini karşılamaz.
+Sıradaki adımlar: Safari eklentisi, Apple Developer ID imzası ve onayı (ilk açılış uyarısını kaldırır), Chrome Web Store yayını, giriş gerektiren siteler için oturum/çerez desteği, indirme bitince yapılacaklar (Mac'i uyut, arşivi aç), bildirimler. Öneri ve hata bildirimleri için GitHub'da issue açabilirsiniz.
 
 Kaynaklarda üçüncü taraf Swift bağımlılığı yoktur; video siteleri için isteğe bağlı olarak yt-dlp ve ffmpeg kullanılır. Katkılar ve hata bildirimleri GitHub üzerinden kabul edilir.
 
@@ -173,6 +184,24 @@ Gerçek geçmişe ve ayarlara dokunmadan denemek için uygulama Terminal’den �
 ```sh
 open -n dist/Akıntı.app --args --state-dir /tmp/akinti-deneme --add https://example.org/dosya.zip --select-first --open-settings
 ```
+
+## Yasal uyarı
+
+Akıntı, içerik indirmek için kullanılan genel amaçlı bir araçtır; neyi indirdiğinizden siz sorumlusunuz.
+
+- Video sitelerinden (YouTube vb.) yalnızca **kendi içeriklerinizi**, **açık lisanslı** (ör. Creative Commons) içerikleri veya hak sahibinin indirmeye izin verdiği içerikleri indirin. Sitelerin kullanım koşulları izinsiz indirmeyi yasaklayabilir.
+- Torrenti yalnızca **paylaşım hakkı olan** içerikler (ör. Linux kalıpları, açık lisanslı dosyalar) için kullanın.
+- Akıntı; YouTube, Google, Apple, IDM (Internet Download Manager) veya adı geçen diğer ürün ve şirketlerle bağlantılı değildir. Ürün adları sahiplerinin markalarıdır.
+
+## Gizlilik
+
+Akıntı **hiçbir veri toplamaz**, hesap istemez, reklam veya izleme içermez. İnternete yalnızca şunlar için bağlanır:
+
+- sizin eklediğiniz indirmeler;
+- güncelleme denetimi (günde bir kez, `api.github.com`; Ayarlar'dan kapatılabilir);
+- siz kurmak isteyince bileşenlerin indirilmesi ve yt-dlp'nin güncelliğinin denetlenmesi (`github.com`, `ffmpeg.martin-riedl.de`).
+
+Geçmiş ve ayarlar yalnızca Mac'inizde (`~/Library/Application Support/Akinti`) tutulur. Tarayıcı eklentisi de veri toplamaz; yalnızca sizin gönderdiğiniz bağlantıları Mac'teki Akıntı'ya iletir.
 
 ## Lisanslar
 
