@@ -79,6 +79,28 @@ final class BrowserBridgeTests: XCTestCase {
         let id = String(hasher.hex.prefix(32).map { Character(UnicodeScalar(UInt8(ascii: "a") + UInt8($0.hexDigitValue!))) })
         XCTAssertEqual(id, BrowserBridge.extensionIDs.first)
     }
+
+    func testInstalledExtensionIsSyncedOnUpdate() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("bundle"), target = root.appendingPathComponent("Akıntı Eklentisi")
+        try FileManager.default.createDirectory(at: source.appendingPathComponent("lib"), withIntermediateDirectories: true)
+        try Data(#"{"version":"1.1.0"}"#.utf8).write(to: source.appendingPathComponent("manifest.json"))
+        try Data("yeni".utf8).write(to: source.appendingPathComponent("lib/core.js"))
+        // Kullanıcı eklentiyi hiç kurmadıysa (klasör yok) dokunulmaz.
+        XCTAssertFalse(BrowserBridge.syncInstalledExtension(from: source, to: target))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: target.path))
+        // Eski sürüm kuruluysa güncellenir; eski dosyalar kalmaz.
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try Data(#"{"version":"1.0.0"}"#.utf8).write(to: target.appendingPathComponent("manifest.json"))
+        try Data("eski".utf8).write(to: target.appendingPathComponent("eski.js"))
+        XCTAssertTrue(BrowserBridge.syncInstalledExtension(from: source, to: target))
+        XCTAssertEqual(BrowserBridge.manifestVersion(target), "1.1.0")
+        XCTAssertEqual(try String(contentsOf: target.appendingPathComponent("lib/core.js"), encoding: .utf8), "yeni")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: target.appendingPathComponent("eski.js").path))
+        // Aynı sürümse tekrar kopyalanmaz.
+        XCTAssertFalse(BrowserBridge.syncInstalledExtension(from: source, to: target))
+    }
 }
 
 import CryptoKit

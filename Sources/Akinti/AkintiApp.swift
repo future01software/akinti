@@ -453,6 +453,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let store = Self.store { Self.statusItem = StatusItemController(store: store) }
         // Tarayıcı eklentisi köprüsünü kurulu Chrome/Brave/Edge/Arc… tarayıcılarına kaydet (uygulama taşınırsa yolu günceller).
         BrowserBridge.register()
+        BrowserBridge.syncInstalledExtension()
         // YouTube sık değiştiği için Akıntı'nın kurduğu yt-dlp günde bir kez denetlenip güncellenir.
         if Self.store?.preferences.autoUpdateTools == true {
             Task { @MainActor in await ToolManager.shared.updateYtDlpIfNeeded() }

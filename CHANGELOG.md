@@ -6,6 +6,15 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.10.3] - 2026-11-10
+
+### Düzeltildi
+- **Chrome eklentisi kurulurken klasörün bulunamaması.** Eklenti gizli Kitaplık klasörüne konuyordu ve Chrome'un dosya seçicisinde görünmüyordu. Artık **Belgeler → Akıntı Eklentisi** klasörüne konur.
+
+### Eklendi
+- Akıntı güncellenince kurulu eklenti klasörü de kendiliğinden güncellenir.
+- Ayarlar → Tarayıcı eklentisi: **Eklentiyi hazırla** ve **Chrome'da eklentileri aç** düğmeleri, adım adım kurulum.
+
 ## [0.10.2] - 2026-11-10
 
 ### Düzeltildi
@@ -174,7 +183,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.2...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/future01software/akinti/releases/tag/v0.10.3
 [0.10.2]: https://github.com/future01software/akinti/releases/tag/v0.10.2
 [0.10.1]: https://github.com/future01software/akinti/releases/tag/v0.10.1
 [0.10.0]: https://github.com/future01software/akinti/releases/tag/v0.10.0

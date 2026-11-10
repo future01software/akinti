@@ -134,7 +134,12 @@ Akıntı'nın Chrome eklentisi IDM'deki gibi çalışır:
 
 Eklenti Akıntı ile **Native Messaging** üzerinden konuşur (açılır pencere çıkmaz): Akıntı açılınca uygulamanın içindeki küçük köprüyü (`akinti-bridge`) kurulu Chrome, Brave, Edge, Arc, Chromium ve Vivaldi'ye kaydeder; köprü yalnızca Akıntı eklentisinin kimliğine (`ojpoadglbpcggeknbppjmhmeajdeiklk`) yanıt verir.
 
-**Kurulum:** Akıntı → Ayarlar → **Tarayıcı eklentisi** → “Eklenti klasörünü göster”; tarayıcıda `chrome://extensions` → **Geliştirici modu** → **Paketlenmemiş öğe yükle** → açılan `ChromeExtension` klasörü. Eklenti ayrıca her sürümde `Akinti-Chrome-Extension.zip` olarak yayınlanır.
+**Kurulum:**
+1. Akıntı → Ayarlar → **Tarayıcı eklentisi** → **Eklentiyi hazırla**. Eklenti **Belgeler → Akıntı Eklentisi** klasörüne konur.
+2. Tarayıcıda `chrome://extensions` adresini açın (Ayarlar'daki **Chrome'da eklentileri aç** düğmesi de açar) ve sağ üstten **Geliştirici modu**'nu açın.
+3. **Paketlenmemiş öğe yükle** → soldan **Belgeler** → **Akıntı Eklentisi** → **Seç**.
+
+Klasörü silmeyin: Akıntı güncellendikçe eklenti de kendiliğinden güncellenir. Eklenti ayrıca her sürümde `Akinti-Chrome-Extension.zip` olarak yayınlanır.
 
 <p align="center"><img src="docs/eklenti-panel.png" width="300" alt="Akıntı eklentisinin araç çubuğu paneli"> &nbsp; <img src="docs/eklenti-ayarlar.png" width="420" alt="Akıntı eklentisinin ayarlar sayfası"></p>
 

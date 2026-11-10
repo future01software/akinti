@@ -19,6 +19,17 @@ struct PreferencesView: View {
         return t("Homebrew: ", "Homebrew: ") + url.path
     }
 
+    /// chrome://extensions sayfasını Chrome'da (yoksa Brave/Edge/Arc'ta) açar; hiçbiri yoksa adresi panoya kopyalar.
+    private func openChromeExtensions() {
+        let candidates = ["com.google.Chrome", "com.brave.Browser", "com.microsoft.edgemac", "company.thebrowser.Browser", "org.chromium.Chromium"]
+        if let app = candidates.lazy.compactMap({ NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }).first,
+           let url = URL(string: "chrome://extensions") {
+            NSWorkspace.shared.open([url], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
+        } else {
+            NSPasteboard.general.clearContents(); NSPasteboard.general.setString("chrome://extensions", forType: .string)
+        }
+    }
+
     private func openLicenses() {
         let bundled = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/Licenses")
         if FileManager.default.fileExists(atPath: bundled.path) { NSWorkspace.shared.open(bundled) }
@@ -93,15 +104,13 @@ struct PreferencesView: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(t("Kurulum", "Setup")).font(.callout.weight(.semibold))
-                    Text(t("1. “Eklenti klasörünü göster”e basın.\n2. Tarayıcıda chrome://extensions adresini açıp sağ üstten Geliştirici modunu açın.\n3. “Paketlenmemiş öğe yükle”ye basıp açılan Akıntı klasörünü (ChromeExtension) seçin.",
-                           "1. Click “Show extension folder”.\n2. In your browser open chrome://extensions and turn on Developer mode (top right).\n3. Click “Load unpacked” and choose the Akıntı folder (ChromeExtension)."))
+                    Text(t("1. “Eklentiyi hazırla”ya basın: eklenti Belgeler → Akıntı Eklentisi klasörüne konur.\n2. Tarayıcıda chrome://extensions adresini açıp sağ üstten Geliştirici modunu açın.\n3. “Paketlenmemiş öğe yükle”ye basın, soldan Belgeler’i, sonra “Akıntı Eklentisi” klasörünü seçip “Seç”e basın.\nKlasörü silmeyin; Akıntı güncellendikçe eklenti de kendiliğinden güncellenir.",
+                           "1. Click “Prepare extension”: it is placed in Documents → Akıntı Eklentisi.\n2. In your browser open chrome://extensions and turn on Developer mode (top right).\n3. Click “Load unpacked”, pick Documents on the left, then the “Akıntı Eklentisi” folder, and click “Select”.\nKeep the folder; the extension updates itself whenever Akıntı updates."))
                         .font(.callout).foregroundStyle(.secondary).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack {
-                    Button(t("Eklenti klasörünü göster", "Show extension folder")) { BrowserBridge.revealExtension() }
-                    Button(t("chrome://extensions adresini kopyala", "Copy chrome://extensions")) {
-                        NSPasteboard.general.clearContents(); NSPasteboard.general.setString("chrome://extensions", forType: .string)
-                    }
+                    Button(t("Eklentiyi hazırla", "Prepare extension")) { BrowserBridge.revealExtension() }.buttonStyle(.borderedProminent)
+                    Button(t("Chrome’da eklentileri aç", "Open extensions in Chrome")) { openChromeExtensions() }
                 }
             }
             Section(t("Bileşenler", "Components")) {

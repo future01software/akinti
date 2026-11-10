@@ -76,20 +76,48 @@ enum BrowserBridge {
         return done
     }
 
-    /// Eklenti klasörünü (uygulamanın içinden) Uygulama Desteği'ne kopyalar ve Finder'da gösterir;
-    /// kullanıcı Chrome'da "Paketlenmemiş öğe yükle" ile bu klasörü seçer.
+    /// Kullanıcının Chrome'da "Paketlenmemiş öğe yükle" ile seçtiği klasör. Gizli Kitaplık klasöründe olursa
+    /// Chrome'un dosya seçicisinde görünmüyor; bu yüzden Belgeler'de durur. Testlerde değiştirilir.
+    nonisolated(unsafe) static var extensionFolder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("Akıntı Eklentisi", isDirectory: true)
+
+    static var bundledExtension: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/ChromeExtension") }
+
+    /// Eklentiyi Belgeler/Akıntı Eklentisi klasörüne kopyalar (veya günceller) ve Finder'da gösterir.
     @discardableResult
     static func revealExtension() -> URL? {
-        let bundled = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/ChromeExtension")
-        guard FileManager.default.fileExists(atPath: bundled.path) else {
+        guard FileManager.default.fileExists(atPath: bundledExtension.path) else {
             NSWorkspace.shared.open(URL(string: "https://github.com/future01software/akinti/releases/latest")!)
             return nil
         }
-        let target = applicationSupport.appendingPathComponent("Akinti/ChromeExtension")
-        try? FileManager.default.removeItem(at: target)
-        try? FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? FileManager.default.copyItem(at: bundled, to: target)
-        NSWorkspace.shared.activateFileViewerSelecting([target])
-        return target
+        guard copyExtension(from: bundledExtension, to: extensionFolder) else { return nil }
+        NSWorkspace.shared.activateFileViewerSelecting([extensionFolder.appendingPathComponent("manifest.json")])
+        return extensionFolder
+    }
+
+    /// Kullanıcı eklentiyi kurduysa (klasör varsa) ve Akıntı'daki sürüm farklıysa klasörü günceller.
+    /// Chrome yeni sürümü bir sonraki açılışta (veya eklentiler sayfasında "yeniden yükle" ile) kullanır.
+    @discardableResult
+    static func syncInstalledExtension(from source: URL = bundledExtension, to target: URL = extensionFolder) -> Bool {
+        guard FileManager.default.fileExists(atPath: target.appendingPathComponent("manifest.json").path),
+              let new = manifestVersion(source), new != manifestVersion(target) else { return false }
+        return copyExtension(from: source, to: target)
+    }
+
+    static func manifestVersion(_ folder: URL) -> String? {
+        (try? JSONSerialization.jsonObject(with: Data(contentsOf: folder.appendingPathComponent("manifest.json"))) as? [String: Any])?["version"] as? String
+    }
+
+    /// Klasörün içeriğini değiştirir; klasörün kendisi (Chrome'un hatırladığı yol) aynı kalır.
+    private static func copyExtension(from source: URL, to target: URL) -> Bool {
+        let fm = FileManager.default
+        do {
+            try fm.createDirectory(at: target, withIntermediateDirectories: true)
+            for item in try fm.contentsOfDirectory(atPath: target.path) { try fm.removeItem(at: target.appendingPathComponent(item)) }
+            for item in try fm.contentsOfDirectory(atPath: source.path) {
+                try fm.copyItem(at: source.appendingPathComponent(item), to: target.appendingPathComponent(item))
+            }
+            return true
+        } catch { return false }
     }
 }
