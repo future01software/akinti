@@ -6,6 +6,11 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 
 ## [Yayınlanmamış]
 
+## [0.10.1] - 2026-11-10
+
+### Düzeltildi
+- **Dock'tan "Çık" dedikten sonra menü çubuğu simgesine tıklayınca panelin açılmaması.** Dock'un "çık" komutu, uygulamanın kapanma süreci başladıktan sonra iptal ediliyordu; SwiftUI bu sırada sahnelerini kapatmaya hazırlandığı için simge kalsa da paneli çalışmıyordu. Komut artık kapanma hiç başlamadan karşılanıyor. ⌘Q, menüden “Akıntı'dan çık”, oturum kapatma ve yeniden başlatma eskisi gibi gerçekten kapatır.
+
 ## [0.10.0] - 2026-11-10
 
 ### Eklendi
@@ -163,7 +168,8 @@ Yeni bir sürüm yayınlamadan önce değişiklikleri **Yayınlanmamış** başl
 ### Eklendi
 - İlk sürüm: HTTP/HTTPS indirme, kuyruk, duraklat/devam, planlı başlatma, otomatik yeniden deneme, geçmiş ve arama.
 
-[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.0...HEAD
+[Yayınlanmamış]: https://github.com/future01software/akinti/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/future01software/akinti/releases/tag/v0.10.1
 [0.10.0]: https://github.com/future01software/akinti/releases/tag/v0.10.0
 [0.9.0]: https://github.com/future01software/akinti/releases/tag/v0.9.0
 [0.8.2]: https://github.com/future01software/akinti/releases/tag/v0.8.2

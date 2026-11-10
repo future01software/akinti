@@ -436,6 +436,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var store: DownloadStore?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Dock'un "Çık" komutunu kapanma süreci başlamadan karşıla (AppKit'in kendi işleyicisinin yerine).
+        NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleQuitEvent(_:withReplyEvent:)),
+                                                     forEventClass: AEEventClass(kCoreEventClass), andEventID: AEEventID(kAEQuitApplication))
         // "Yalnızca menü çubuğunda" kipinde ana pencere kapanınca Dock simgesi gizlenir.
         NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
             guard let window = note.object as? NSWindow, MainWindow.isMainWindow(window) else { return }
@@ -458,12 +461,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Dock'tan "Çık": menü çubuğu simgesi açıksa uygulama kapanmaz; pencereler kapanır, Dock simgesi gizlenir.
     /// ⌘Q ve menü çubuğundaki "Akıntı'dan çık" gerçekten kapatır; oturum kapatma/yeniden başlatma her zaman kapatır.
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let prefs = Self.store?.preferences, prefs.showMenuBarIcon, prefs.keepRunningOnDockQuit,
-              Self.isQuitAppleEventWithoutReason(NSAppleEventManager.shared().currentAppleEvent) else { return .terminateNow }
+    ///
+    /// Not: Bu, `applicationShouldTerminate` içinde iptal edilerek yapılmaz. Kapanma süreci bir kez başlayınca
+    /// SwiftUI sahnelerini kapatmaya hazırlanıyor; iptal edilince menü çubuğu simgesi kalsa da paneli açılmıyordu.
+    /// Bu yüzden "çık" Apple olayı, kapanma hiç başlamadan burada karşılanır.
+    @objc func handleQuitEvent(_ event: NSAppleEventDescriptor, withReplyEvent reply: NSAppleEventDescriptor) {
+        if let prefs = Self.store?.preferences, prefs.showMenuBarIcon, prefs.keepRunningOnDockQuit,
+           Self.isQuitAppleEventWithoutReason(event) {
+            Self.moveToMenuBar()
+        } else {
+            NSApp.terminate(nil)
+        }
+    }
+
+    /// Pencereleri kapatır ve Dock simgesini gizler; menü çubuğu simgesi ve indirmeler sürer.
+    static func moveToMenuBar() {
         for window in NSApp.windows where window.isVisible && window.level == .normal { window.close() }
         DispatchQueue.main.async { NSApp.setActivationPolicy(.accessory) }
-        return .terminateCancel
     }
 
     /// Dock (veya başka bir uygulama) "çık" Apple olayı gönderdiyse true. ⌘Q ve menüden çıkışta olay yoktur;
@@ -602,3 +616,4 @@ struct AkintiCommands: Commands {
         }
     }
 }
+
